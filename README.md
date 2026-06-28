@@ -23,7 +23,7 @@ no copy-paste drift.
 | [`messaging`](modules/messaging) | ✅ available | Data-driven SQS (DLQs) + SNS topics + subscriptions |
 | [`secrets`](modules/secrets) | ✅ available | Secrets Manager (empty secrets) + SSM Parameter Store |
 | `waf` | ⏳ planned | WAF v2 WebACL (common rules + rate limiting) |
-| `iam-oidc` | ⏳ planned | GitHub OIDC provider + deploy roles |
+| [`iam-oidc`](modules/iam-oidc) | ✅ available | GitHub OIDC deploy roles (per-env, ecr-push, infra plan/apply) |
 
 Migration of the remaining modules from product repos is tracked in
 [`qnsc-infra/docs/shared-modules-migration.md`](https://github.com/QNSC-VN/qnsc-infra/blob/main/docs/shared-modules-migration.md).
