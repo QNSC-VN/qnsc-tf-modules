@@ -18,7 +18,7 @@ no copy-paste drift.
 | [`ecr`](modules/ecr) | ✅ available | ECR repositories + lifecycle + optional repo policy |
 | [`ecs-cluster`](modules/ecs-cluster) | ✅ available | ECS cluster + Fargate capacity providers + Container Insights |
 | `ecs-service` | ⏳ planned | Reusable task def + service + ALB rule + autoscaling |
-| `network` | ⏳ planned | VPC, subnets, NAT, security groups, endpoints |
+| [`network`](modules/network) | ✅ available | VPC, 3-tier subnets, NAT, SGs, endpoints (toggleable), flow logs |
 | `rds` | ⏳ planned | RDS PostgreSQL + Secrets Manager |
 | [`messaging`](modules/messaging) | ✅ available | Data-driven SQS (DLQs) + SNS topics + subscriptions |
 | [`secrets`](modules/secrets) | ✅ available | Secrets Manager (empty secrets) + SSM Parameter Store |
