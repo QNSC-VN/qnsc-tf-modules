@@ -1,0 +1,7 @@
+# Shared infrastructure modules — consumed by every product.
+# A change here can affect all products' infrastructure, so all changes
+# require platform-lead review.
+*                          @Nghia-VanTrong
+
+# Module source — the API surface consumed across the org.
+modules/                   @Nghia-VanTrong
