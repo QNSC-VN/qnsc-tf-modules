@@ -15,7 +15,7 @@ no copy-paste drift.
 | Module | Status | Description |
 | :----- | :----- | :---------- |
 | [`cdn`](modules/cdn) | ✅ available | S3 + CloudFront for SPA hosting (OAC, HTTPS, SPA routing) |
-| `ecr` | ⏳ planned | ECR repositories with lifecycle policies |
+| [`ecr`](modules/ecr) | ✅ available | ECR repositories + lifecycle + optional repo policy |
 | [`ecs-cluster`](modules/ecs-cluster) | ✅ available | ECS cluster + Fargate capacity providers + Container Insights |
 | `ecs-service` | ⏳ planned | Reusable task def + service + ALB rule + autoscaling |
 | `network` | ⏳ planned | VPC, subnets, NAT, security groups, endpoints |
