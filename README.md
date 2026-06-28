@@ -20,7 +20,7 @@ no copy-paste drift.
 | `ecs-service` | ⏳ planned | Reusable task def + service + ALB rule + autoscaling |
 | `network` | ⏳ planned | VPC, subnets, NAT, security groups, endpoints |
 | `rds` | ⏳ planned | RDS PostgreSQL + Secrets Manager |
-| `messaging` | ⏳ planned | SQS queues (with DLQs) + SNS topics |
+| [`messaging`](modules/messaging) | ✅ available | Data-driven SQS (DLQs) + SNS topics + subscriptions |
 | [`secrets`](modules/secrets) | ✅ available | Secrets Manager (empty secrets) + SSM Parameter Store |
 | `waf` | ⏳ planned | WAF v2 WebACL (common rules + rate limiting) |
 | `iam-oidc` | ⏳ planned | GitHub OIDC provider + deploy roles |
