@@ -16,3 +16,7 @@ terraform.rc
 
 # OS
 .DS_Store
+
+# Lambda build artifacts
+.build/
+*.zip
