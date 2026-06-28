@@ -21,7 +21,7 @@ no copy-paste drift.
 | `network` | ⏳ planned | VPC, subnets, NAT, security groups, endpoints |
 | `rds` | ⏳ planned | RDS PostgreSQL + Secrets Manager |
 | `messaging` | ⏳ planned | SQS queues (with DLQs) + SNS topics |
-| `secrets` | ⏳ planned | Secrets Manager + SSM scaffolding |
+| [`secrets`](modules/secrets) | ✅ available | Secrets Manager (empty secrets) + SSM Parameter Store |
 | `waf` | ⏳ planned | WAF v2 WebACL (common rules + rate limiting) |
 | `iam-oidc` | ⏳ planned | GitHub OIDC provider + deploy roles |
 
