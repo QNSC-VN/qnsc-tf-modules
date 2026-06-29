@@ -19,7 +19,7 @@ no copy-paste drift.
 | [`ecs-cluster`](modules/ecs-cluster) | ✅ available | ECS cluster + Fargate capacity providers + Container Insights |
 | [`ecs-service`](modules/ecs-service) | ✅ available | Fargate service: task def, IAM, ALB, circuit breaker, CPU+mem autoscaling |
 | [`network`](modules/network) | ✅ available | VPC, 3-tier subnets, NAT, SGs, endpoints (toggleable), flow logs |
-| `rds` | ⏳ planned | RDS PostgreSQL + Secrets Manager |
+| [`rds`](modules/rds) | ✅ available | RDS PostgreSQL, managed password, PI, param group, enhanced monitoring |
 | [`messaging`](modules/messaging) | ✅ available | Data-driven SQS (DLQs) + SNS topics + subscriptions |
 | [`secrets`](modules/secrets) | ✅ available | Secrets Manager (empty secrets) + SSM Parameter Store |
 | `waf` | ⏳ planned | WAF v2 WebACL (common rules + rate limiting) |
