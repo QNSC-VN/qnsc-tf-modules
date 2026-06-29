@@ -17,8 +17,9 @@ resource "aws_db_parameter_group" "this" {
   family = "postgres${var.engine_version}"
 
   parameter {
-    name  = "shared_preload_libraries"
-    value = "pg_stat_statements"
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot" # static parameter — can't be applied immediately
   }
   parameter {
     name  = "log_min_duration_statement"
