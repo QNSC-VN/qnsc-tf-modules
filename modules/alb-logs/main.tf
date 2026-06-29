@@ -11,7 +11,6 @@
 # =============================================================================
 
 data "aws_elb_service_account" "main" {}
-data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "logs" {
   bucket        = var.bucket_name

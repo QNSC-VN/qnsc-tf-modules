@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 locals {
   full_name = "${var.cluster_name}-${var.service_name}"
 }
