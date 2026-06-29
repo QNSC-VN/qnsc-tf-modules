@@ -22,7 +22,7 @@ no copy-paste drift.
 | [`rds`](modules/rds) | ✅ available | RDS PostgreSQL, managed password, PI, param group, enhanced monitoring |
 | [`messaging`](modules/messaging) | ✅ available | Data-driven SQS (DLQs) + SNS topics + subscriptions |
 | [`secrets`](modules/secrets) | ✅ available | Secrets Manager (empty secrets) + SSM Parameter Store |
-| `waf` | ⏳ planned | WAF v2 WebACL (common rules + rate limiting) |
+| [`waf`](modules/waf) | ✅ available | WAFv2: managed rules + rate limit + logging + ALB association |
 | [`iam-oidc`](modules/iam-oidc) | ✅ available | GitHub OIDC deploy roles (per-env, ecr-push, infra plan/apply) |
 
 Migration of the remaining modules from product repos is tracked in
