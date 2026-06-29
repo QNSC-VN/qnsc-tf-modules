@@ -14,10 +14,10 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  account_id  = data.aws_caller_identity.current.account_id
-  ecr_arn     = "arn:aws:ecr:*:${local.account_id}:repository/${var.ecr_repository_pattern}"
-  passrole    = "arn:aws:iam::${local.account_id}:role/${var.ecs_passrole_pattern}"
-  infra_sub   = "repo:${var.github_org}/${var.infra_repo_name}"
+  account_id = data.aws_caller_identity.current.account_id
+  ecr_arn    = "arn:aws:ecr:*:${local.account_id}:repository/${var.ecr_repository_pattern}"
+  passrole   = "arn:aws:iam::${local.account_id}:role/${var.ecs_passrole_pattern}"
+  infra_sub  = "repo:${var.github_org}/${var.infra_repo_name}"
 }
 
 # ── Per-environment app deploy roles ──────────────────────────────────────────

@@ -47,15 +47,15 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:*"
       },
       {
-        Sid    = "DiscoverByTag"
-        Effect = "Allow"
-        Action = ["tag:GetResources"]
+        Sid      = "DiscoverByTag"
+        Effect   = "Allow"
+        Action   = ["tag:GetResources"]
         Resource = "*"
       },
       {
-        Sid    = "RdsStartStop"
-        Effect = "Allow"
-        Action = ["rds:DescribeDBInstances", "rds:StopDBInstance", "rds:StartDBInstance"]
+        Sid      = "RdsStartStop"
+        Effect   = "Allow"
+        Action   = ["rds:DescribeDBInstances", "rds:StopDBInstance", "rds:StartDBInstance"]
         Resource = "*"
       },
       {
