@@ -85,8 +85,11 @@ resource "aws_wafv2_web_acl" "this" {
 }
 
 # ── Associate with ALB ─────────────────────────────────────────────────────────
+# Gate only on `enabled` (a static value). The ALB ARN is computed at apply time,
+# so including it in `count` breaks `tofu plan` ("Invalid count argument"). When
+# enabled, alb_arn is always supplied by the caller.
 resource "aws_wafv2_web_acl_association" "this" {
-  count        = var.enabled && var.alb_arn != "" ? 1 : 0
+  count        = var.enabled ? 1 : 0
   resource_arn = var.alb_arn
   web_acl_arn  = aws_wafv2_web_acl.this[0].arn
 }
