@@ -45,10 +45,24 @@ variable "alb_ingress_cidrs" {
   description = "CIDRs allowed to reach the ALB on 80/443."
 }
 
+variable "nat_type" {
+  type        = string
+  default     = "gateway"
+  description = <<-EOT
+    NAT egress type for private subnets.
+      "gateway"  — AWS managed NAT Gateway (~$33/mo). Use for prod (reliability, no ops).
+      "instance" — fck-nat t4g.nano EC2 (~$3/mo). Use for dev (single AZ, saves ~$30/mo).
+  EOT
+  validation {
+    condition     = contains(["gateway", "instance"], var.nat_type)
+    error_message = "nat_type must be 'gateway' or 'instance'."
+  }
+}
+
 variable "multi_az_nat" {
   type        = bool
   default     = false
-  description = "One NAT gateway per AZ (HA, prod) vs a single NAT (cheaper, dev)."
+  description = "One NAT gateway per AZ (HA, prod) vs a single NAT. Ignored when nat_type = 'instance'."
 }
 
 variable "enable_interface_endpoints" {

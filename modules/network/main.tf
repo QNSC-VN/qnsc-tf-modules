@@ -46,19 +46,66 @@ resource "aws_internet_gateway" "this" {
   tags   = merge(var.tags, { Name = "${var.name}-igw" })
 }
 
-# ── NAT Gateways (one per AZ when multi_az_nat=true, else single) ─────────────
+# ── NAT — Gateway (prod) or fck-nat instance (dev) ───────────────────────────
+# nat_type = "gateway": AWS managed NAT Gateway — reliable, no ops, ~$33/mo.
+# nat_type = "instance": fck-nat t4g.nano in first public subnet — ~$3/mo,
+#   single AZ (acceptable for dev), community-maintained Graviton AMI.
+
+locals {
+  nat_azs = var.nat_type == "gateway" ? (var.multi_az_nat ? toset(var.azs) : toset([var.azs[0]])) : toset([])
+}
+
 resource "aws_eip" "nat" {
-  for_each = var.multi_az_nat ? toset(var.azs) : toset([var.azs[0]])
+  for_each = local.nat_azs
   domain   = "vpc"
   tags     = merge(var.tags, { Name = "${var.name}-nat-eip-${each.key}" })
 }
 
 resource "aws_nat_gateway" "this" {
-  for_each      = var.multi_az_nat ? toset(var.azs) : toset([var.azs[0]])
+  for_each      = local.nat_azs
   allocation_id = aws_eip.nat[each.key].id
   subnet_id     = aws_subnet.public[each.key].id
   tags          = merge(var.tags, { Name = "${var.name}-nat-${each.key}" })
   depends_on    = [aws_internet_gateway.this]
+}
+
+# fck-nat: community-maintained NAT instance AMI for Graviton (AL2023, arm64).
+# Source: https://github.com/AndrewGuenther/fck-nat
+data "aws_ssm_parameter" "fck_nat_ami" {
+  count = var.nat_type == "instance" ? 1 : 0
+  name  = "/aws/service/community/fck-nat/al2023/arm64/latest/image_id"
+}
+
+resource "aws_security_group" "nat_instance" {
+  count       = var.nat_type == "instance" ? 1 : 0
+  name        = "${var.name}-nat-instance"
+  description = "fck-nat instance — inbound from VPC, all outbound"
+  vpc_id      = aws_vpc.this.id
+  tags        = merge(var.tags, { Name = "${var.name}-sg-nat-instance" })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nat_from_vpc" {
+  count             = var.nat_type == "instance" ? 1 : 0
+  security_group_id = aws_security_group.nat_instance[0].id
+  cidr_ipv4         = var.vpc_cidr
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "nat_to_all" {
+  count             = var.nat_type == "instance" ? 1 : 0
+  security_group_id = aws_security_group.nat_instance[0].id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_instance" "nat" {
+  count                  = var.nat_type == "instance" ? 1 : 0
+  ami                    = data.aws_ssm_parameter.fck_nat_ami[0].value
+  instance_type          = "t4g.nano"
+  subnet_id              = aws_subnet.public[var.azs[0]].id
+  source_dest_check      = false
+  vpc_security_group_ids = [aws_security_group.nat_instance[0].id]
+  tags                   = merge(var.tags, { Name = "${var.name}-nat-instance", AutoStop = "true" })
 }
 
 # ── Route tables ──────────────────────────────────────────────────────────────
@@ -80,10 +127,23 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   for_each = aws_subnet.private
   vpc_id   = aws_vpc.this.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = var.multi_az_nat ? aws_nat_gateway.this[each.key].id : aws_nat_gateway.this[var.azs[0]].id
+
+  dynamic "route" {
+    for_each = var.nat_type == "gateway" ? [1] : []
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = var.multi_az_nat ? aws_nat_gateway.this[each.key].id : aws_nat_gateway.this[var.azs[0]].id
+    }
   }
+
+  dynamic "route" {
+    for_each = var.nat_type == "instance" ? [1] : []
+    content {
+      cidr_block           = "0.0.0.0/0"
+      network_interface_id = aws_instance.nat[0].primary_network_interface_id
+    }
+  }
+
   tags = merge(var.tags, { Name = "${var.name}-rt-private-${each.key}" })
 }
 
