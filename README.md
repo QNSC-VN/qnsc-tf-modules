@@ -2,7 +2,7 @@
 
 Shared, versioned OpenTofu/Terraform modules for all QNSC products.
 
-This is the infrastructure counterpart to [`qnsc-gitops`](https://github.com/QNSC-VN/qnsc-gitops)
+This is the infrastructure counterpart to [`qnsc-ci`](https://github.com/QNSC-VN/qnsc-ci)
 (shared CI actions): reusable Terraform building blocks live here once, are
 versioned per module, and are consumed by every product's `*-infra` repo. Fixes
 and improvements made here propagate to all products on their next version bump —
