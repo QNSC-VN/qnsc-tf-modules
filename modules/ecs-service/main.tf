@@ -195,8 +195,28 @@ resource "aws_ecs_service" "this" {
   cluster                = var.cluster_arn
   task_definition        = aws_ecs_task_definition.this.arn
   desired_count          = var.desired_count
-  launch_type            = "FARGATE"
+  # launch_type and capacity_provider_strategy are mutually exclusive.
+  # use_spot=true: prefer FARGATE_SPOT (4:1), fall back to on-demand.
+  launch_type            = var.use_spot ? null : "FARGATE"
   enable_execute_command = var.enable_ecs_exec
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.use_spot ? [1] : []
+    content {
+      capacity_provider = "FARGATE_SPOT"
+      weight            = 4
+      base              = 0
+    }
+  }
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.use_spot ? [1] : []
+    content {
+      capacity_provider = "FARGATE"
+      weight            = 1
+      base              = 0
+    }
+  }
 
   network_configuration {
     subnets          = var.subnet_ids

@@ -120,6 +120,11 @@ variable "enable_ecs_exec" {
   default     = false
   description = "Enable ECS Exec (aws ecs execute-command) for debugging."
 }
+variable "use_spot" {
+  type        = bool
+  default     = false
+  description = "Prefer FARGATE_SPOT (weight 4) with FARGATE fallback (weight 1). Saves ~70% on Fargate compute in dev."
+}
 variable "tags" {
   type    = map(string)
   default = {}
