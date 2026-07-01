@@ -71,9 +71,16 @@ resource "aws_nat_gateway" "this" {
 
 # fck-nat: community-maintained NAT instance AMI for Graviton (AL2023, arm64).
 # Source: https://github.com/AndrewGuenther/fck-nat
-data "aws_ssm_parameter" "fck_nat_ami" {
-  count = var.nat_type == "instance" ? 1 : 0
-  name  = "/aws/service/community/fck-nat/al2023/arm64/latest/image_id"
+# Uses aws_ami data source — SSM community namespace requires special permissions.
+data "aws_ami" "fck_nat" {
+  count       = var.nat_type == "instance" ? 1 : 0
+  most_recent = true
+  owners      = ["568608671756"] # fck-nat official AWS account
+
+  filter {
+    name   = "name"
+    values = ["fck-nat-al2023-*-arm64-ebs"]
+  }
 }
 
 resource "aws_security_group" "nat_instance" {
@@ -100,7 +107,7 @@ resource "aws_vpc_security_group_egress_rule" "nat_to_all" {
 
 resource "aws_instance" "nat" {
   count                  = var.nat_type == "instance" ? 1 : 0
-  ami                    = data.aws_ssm_parameter.fck_nat_ami[0].value
+  ami                    = data.aws_ami.fck_nat[0].id
   instance_type          = "t4g.nano"
   subnet_id              = aws_subnet.public[var.azs[0]].id
   source_dest_check      = false
