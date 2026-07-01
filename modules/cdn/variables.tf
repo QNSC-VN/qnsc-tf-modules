@@ -4,11 +4,13 @@ variable "name" {
 }
 
 variable "acm_cert_arn" {
-  type        = string
+  type    = string
+  default = null
   description = <<-EOT
     ACM certificate ARN for the CloudFront distribution.
-    IMPORTANT: must be created in us-east-1 (CloudFront global requirement),
-    regardless of the AWS region used for the rest of the stack.
+    IMPORTANT: must be created in us-east-1 (CloudFront global requirement).
+    Required when aliases is non-empty. When aliases = [], leave null to use
+    the default *.cloudfront.net certificate.
   EOT
 }
 

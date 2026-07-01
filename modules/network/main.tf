@@ -86,7 +86,7 @@ data "aws_ami" "fck_nat" {
 resource "aws_security_group" "nat_instance" {
   count       = var.nat_type == "instance" ? 1 : 0
   name        = "${var.name}-nat-instance"
-  description = "fck-nat instance — inbound from VPC, all outbound"
+  description = "fck-nat instance - inbound from VPC, all outbound"
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name}-sg-nat-instance" })
 }

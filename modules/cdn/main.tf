@@ -131,9 +131,10 @@ resource "aws_cloudfront_distribution" "web" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = var.acm_cert_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+    cloudfront_default_certificate = length(var.aliases) == 0
+    acm_certificate_arn            = length(var.aliases) > 0 ? var.acm_cert_arn : null
+    ssl_support_method             = length(var.aliases) > 0 ? "sni-only" : null
+    minimum_protocol_version       = length(var.aliases) > 0 ? "TLSv1.2_2021" : "TLSv1"
   }
 
   restrictions {
