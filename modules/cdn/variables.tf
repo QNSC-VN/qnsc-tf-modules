@@ -31,6 +31,18 @@ variable "price_class" {
   }
 }
 
+variable "api_origin_domain_name" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Optional ALB/API DNS name. When set, adds a second CloudFront origin and an
+    ordered cache behavior that forwards /v1/* to the API backend without caching.
+    This lets the web SPA use relative API paths (/v1/…) so CORS and mixed-content
+    are not issues — web and API share the same CloudFront domain.
+    Leave null to serve static assets only (default).
+  EOT
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

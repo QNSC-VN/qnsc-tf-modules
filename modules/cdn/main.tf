@@ -1,8 +1,12 @@
 # =============================================================================
 # CDN — S3 + CloudFront for a single-page web app (SPA)
 #
-# Architecture:
+# Architecture (static only):
 #   GitHub Actions → S3 sync → CloudFront (OAC) → User
+#
+# Architecture (with api_origin_domain_name):
+#   /v1/*  → CloudFront → ALB → API (no cache, all headers forwarded)
+#   /*     → CloudFront → S3  → SPA index.html / assets
 #
 # Key design decisions:
 #   - S3 bucket is fully private; only CloudFront (via OAC) can read objects
@@ -10,7 +14,13 @@
 #   - index.html served with no-cache headers (set at deploy time via s3 cp)
 #   - Static assets (/assets/*) use Managed CachingOptimized (1 year TTL)
 #   - Custom error responses map 403/404 → 200 /index.html (S3 + SPA routing)
+#   - API origin: CachingDisabled + AllViewerExceptHostHeader so cookies/auth
+#     headers pass through; Host header replaced with ALB DNS to avoid SNI mismatch
 # =============================================================================
+
+locals {
+  has_api_origin = var.api_origin_domain_name != null
+}
 
 # ── S3 Bucket ─────────────────────────────────────────────────────────────────
 resource "aws_s3_bucket" "web" {
@@ -92,6 +102,43 @@ resource "aws_cloudfront_distribution" "web" {
     domain_name              = aws_s3_bucket.web.bucket_regional_domain_name
     origin_id                = "s3-${var.name}"
     origin_access_control_id = aws_cloudfront_origin_access_control.web.id
+  }
+
+  # Optional ALB origin — only created when api_origin_domain_name is set.
+  # CloudFront connects via HTTPS and lets the ALB handle TLS termination.
+  dynamic "origin" {
+    for_each = local.has_api_origin ? [var.api_origin_domain_name] : []
+    content {
+      domain_name = origin.value
+      origin_id   = "api-${var.name}"
+      custom_origin_config {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "https-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
+    }
+  }
+
+  # ── API proxy behavior — /v1/* → ALB (ordered, evaluated before default) ──
+  # No caching; all viewer headers except Host forwarded (cookies + auth pass through).
+  # Managed policy IDs (us-east-1 global):
+  #   CachingDisabled:              4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+  #   AllViewerExceptHostHeader:    b689b0a8-53d0-40ab-baf2-68738e2966ac
+  dynamic "ordered_cache_behavior" {
+    for_each = local.has_api_origin ? [1] : []
+    content {
+      path_pattern     = "/v1/*"
+      target_origin_id = "api-${var.name}"
+
+      viewer_protocol_policy = "https-only"
+      compress               = true
+      allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods         = ["GET", "HEAD"]
+
+      cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
+      origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # AllViewerExceptHostHeader
+    }
   }
 
   # ── Default cache behaviour — serves index.html + assets ──────────────────
