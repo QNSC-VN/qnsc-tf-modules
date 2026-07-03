@@ -105,7 +105,12 @@ resource "aws_cloudfront_distribution" "web" {
   }
 
   # Optional ALB origin — only created when api_origin_domain_name is set.
-  # CloudFront connects via HTTPS and lets the ALB handle TLS termination.
+  # Uses HTTP (port 80) so CloudFront does NOT need to verify the ALB's TLS cert,
+  # which avoids a 502 caused by the cert domain (api-dev.example.com) not matching
+  # the raw ELB hostname CloudFront connects to. The viewer side is always HTTPS
+  # (viewer_protocol_policy = "https-only" on the cache behavior).
+  # The ALB must have a listener rule on port 80 that forwards /v1/* to the target
+  # group; its default action can remain a redirect for all other paths.
   dynamic "origin" {
     for_each = local.has_api_origin ? [var.api_origin_domain_name] : []
     content {
@@ -114,7 +119,7 @@ resource "aws_cloudfront_distribution" "web" {
       custom_origin_config {
         http_port              = 80
         https_port             = 443
-        origin_protocol_policy = "https-only"
+        origin_protocol_policy = "http-only"
         origin_ssl_protocols   = ["TLSv1.2"]
       }
     }
