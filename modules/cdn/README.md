@@ -1,5 +1,11 @@
 # `cdn` module
 
+> **⚠️ DEPRECATED.** Web SPA hosting is moving to Cloudflare Pages via the
+> [`pages-web`](../pages-web) module (zero egress, native SPA routing, free TLS).
+> `cdn` is retained only for stacks not yet migrated (rally prod, opshub). Do
+> not adopt it for new surfaces; it will be removed once all stacks are on
+> `pages-web`.
+
 S3 + CloudFront for hosting a single-page web app (SPA), with Origin Access
 Control (OAC), HTTPS, and SPA-friendly error routing.
 

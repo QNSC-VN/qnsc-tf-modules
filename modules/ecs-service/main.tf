@@ -191,10 +191,10 @@ resource "aws_lb_listener_rule" "this" {
 
 # ── Service ───────────────────────────────────────────────────────────────────
 resource "aws_ecs_service" "this" {
-  name                   = var.service_name
-  cluster                = var.cluster_arn
-  task_definition        = aws_ecs_task_definition.this.arn
-  desired_count          = var.desired_count
+  name            = var.service_name
+  cluster         = var.cluster_arn
+  task_definition = aws_ecs_task_definition.this.arn
+  desired_count   = var.desired_count
   # launch_type and capacity_provider_strategy are mutually exclusive.
   # use_spot=true: prefer FARGATE_SPOT (4:1), fall back to on-demand.
   launch_type            = var.use_spot ? null : "FARGATE"
