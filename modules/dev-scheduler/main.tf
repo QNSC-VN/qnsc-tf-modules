@@ -78,12 +78,17 @@ resource "aws_lambda_function" "this" {
   handler          = "lambda.handler"
   filename         = data.archive_file.lambda.output_path
   source_code_hash = data.archive_file.lambda.output_base64sha256
-  timeout          = 120
+  # Must exceed RDS_WAIT_TIMEOUT below: on "start" the Lambda starts RDS and
+  # blocks until it is available *before* scaling ECS back up. A cold RDS start
+  # takes several minutes, so a short timeout would kill the Lambda before ECS
+  # is ever scaled, leaving the env with a running DB but 0 tasks.
+  timeout = var.lambda_timeout
 
   environment {
     variables = {
-      TAG_KEY   = var.tag_key
-      TAG_VALUE = var.tag_value
+      TAG_KEY          = var.tag_key
+      TAG_VALUE        = var.tag_value
+      RDS_WAIT_TIMEOUT = tostring(var.rds_wait_timeout)
     }
   }
 
