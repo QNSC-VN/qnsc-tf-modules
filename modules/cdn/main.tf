@@ -24,8 +24,9 @@ locals {
 
 # ── S3 Bucket ─────────────────────────────────────────────────────────────────
 resource "aws_s3_bucket" "web" {
-  bucket = var.name
-  tags   = var.tags
+  bucket        = var.name
+  force_destroy = var.force_destroy # allow teardown even with objects present (SPA build artifacts are ephemeral)
+  tags          = var.tags
 }
 
 resource "aws_s3_bucket_public_access_block" "web" {

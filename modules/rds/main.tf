@@ -101,7 +101,12 @@ resource "aws_db_instance" "this" {
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
-  skip_final_snapshot       = !var.deletion_protection
+  # Dev (deletion_protection=false) skips the final snapshot for clean teardown.
+  # Prod takes a final snapshot by default. skip_final_snapshot can be forced
+  # true at teardown (via -var) to bypass a stale "<id>-final" snapshot that a
+  # prior partial/failed destroy left behind (that collision blocked a teardown
+  # in practice) — cheaper/safer than the module hardcoding the behavior.
+  skip_final_snapshot       = var.skip_final_snapshot != null ? var.skip_final_snapshot : !var.deletion_protection
   final_snapshot_identifier = var.deletion_protection ? "${var.identifier}-final" : null
 
   tags = merge(var.tags, { Name = var.identifier })

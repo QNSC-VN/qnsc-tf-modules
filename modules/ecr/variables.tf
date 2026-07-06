@@ -44,6 +44,16 @@ variable "allowed_principal_arns" {
   description = "IAM principal ARNs allowed to push/pull. Empty = no repository policy created."
 }
 
+variable "force_delete" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Allow repositories to be deleted even when they still contain images.
+    Set true so a full teardown (dev, or a from-scratch rebuild) doesn't require
+    manually deleting images first. Defaults false for safety in long-lived envs.
+  EOT
+}
+
 variable "tags" {
   type        = map(string)
   default     = {}

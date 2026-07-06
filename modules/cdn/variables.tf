@@ -43,6 +43,17 @@ variable "api_origin_domain_name" {
   EOT
 }
 
+variable "force_destroy" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Allow the web S3 bucket to be destroyed even when it still contains objects.
+    SPA build output is ephemeral and re-deployable, so set true in dev (and
+    optionally prod) to make teardown clean without a manual `aws s3 rm`.
+    Defaults false for safety.
+  EOT
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

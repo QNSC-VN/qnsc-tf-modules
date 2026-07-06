@@ -6,6 +6,7 @@ resource "aws_ecr_repository" "repos" {
   for_each             = toset(var.repository_names)
   name                 = each.key
   image_tag_mutability = var.image_tag_mutability
+  force_delete         = var.force_delete # allow teardown even with images present
 
   encryption_configuration {
     # KMS when a key is provided, otherwise AES256 (AWS-managed).

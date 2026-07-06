@@ -44,6 +44,17 @@ variable "deletion_protection" {
   default = false
 }
 
+variable "skip_final_snapshot" {
+  type        = bool
+  default     = null
+  description = <<-EOT
+    Override the final-snapshot behavior. Leave null (default) to derive it from
+    deletion_protection (dev skips, prod snapshots). Set true at teardown time
+    (tofu destroy -var 'skip_final_snapshot=true') to bypass a stale
+    "<identifier>-final" snapshot left by a prior failed/partial destroy.
+  EOT
+}
+
 variable "backup_retention_days" {
   type    = number
   default = 7
