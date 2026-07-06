@@ -51,6 +51,22 @@ variable "infra_apply_policy_arn" {
   description = "Managed policy attached to the infra-apply role. Start broad, tighten later."
 }
 
+variable "web_deploy_environments" {
+  type = map(object({
+    allowed_subjects = list(string)
+    s3_bucket        = string
+  }))
+  default     = {}
+  description = <<-EOT
+    Per-environment web (SPA) deploy roles: S3 sync + CloudFront invalidation.
+    Key = env name (develop/production); allowed_subjects = OIDC sub claims that
+    may assume the role; s3_bucket = the env's web bucket name. Leave empty for
+    products with no web frontend. Creates roles named
+    "<product>-github-web-deploy-<env>" — the pattern every product hand-rolled
+    before this was owned by the module.
+  EOT
+}
+
 variable "tags" {
   type        = map(string)
   default     = {}

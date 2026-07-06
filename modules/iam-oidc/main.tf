@@ -188,3 +188,57 @@ resource "aws_iam_role_policy_attachment" "infra_apply_admin" {
   role       = aws_iam_role.infra_apply.name
   policy_arn = var.infra_apply_policy_arn
 }
+
+# ── Web (SPA) deploy roles — S3 sync + CloudFront invalidation ────────────────
+# Created per entry in var.web_deploy_environments. Every product with a web
+# frontend needs the identical role shape; this replaces the block each product
+# used to hand-roll in its own _shared stack.
+resource "aws_iam_role" "web_deploy" {
+  for_each = var.web_deploy_environments
+
+  name        = "${var.product}-github-web-deploy-${each.key}"
+  description = "GitHub Actions ${var.product}-web deploy (S3 + CloudFront) for ${each.key}."
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Federated = var.oidc_provider_arn }
+      Action    = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
+        StringLike   = { "token.actions.githubusercontent.com:sub" = each.value.allowed_subjects }
+      }
+    }]
+  })
+
+  tags = merge(var.tags, { Environment = each.key })
+}
+
+resource "aws_iam_role_policy" "web_deploy" {
+  for_each = var.web_deploy_environments
+
+  name = "${var.product}-web-deploy-${each.key}"
+  role = aws_iam_role.web_deploy[each.key].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "S3Sync"
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:DeleteObject", "s3:GetObject", "s3:ListBucket"]
+        Resource = [
+          "arn:aws:s3:::${each.value.s3_bucket}",
+          "arn:aws:s3:::${each.value.s3_bucket}/*",
+        ]
+      },
+      {
+        Sid      = "CloudFrontInvalidate"
+        Effect   = "Allow"
+        Action   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"]
+        Resource = "arn:aws:cloudfront::${local.account_id}:distribution/*"
+      },
+    ]
+  })
+}
