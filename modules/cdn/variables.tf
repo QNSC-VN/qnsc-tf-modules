@@ -4,8 +4,8 @@ variable "name" {
 }
 
 variable "acm_cert_arn" {
-  type    = string
-  default = null
+  type        = string
+  default     = null
   description = <<-EOT
     ACM certificate ARN for the CloudFront distribution.
     IMPORTANT: must be created in us-east-1 (CloudFront global requirement).
@@ -40,6 +40,16 @@ variable "api_origin_domain_name" {
     This lets the web SPA use relative API paths (/v1/…) so CORS and mixed-content
     are not issues — web and API share the same CloudFront domain.
     Leave null to serve static assets only (default).
+  EOT
+}
+
+variable "web_acl_arn" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    ARN of a CLOUDFRONT-scoped WAFv2 WebACL to attach to the distribution.
+    Create it with the `waf` module (scope = "CLOUDFRONT", applied via a
+    us-east-1 provider) and pass its web_acl_arn output here. Null = no WAF.
   EOT
 }
 

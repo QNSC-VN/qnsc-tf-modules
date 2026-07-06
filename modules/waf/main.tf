@@ -2,8 +2,8 @@
 resource "aws_wafv2_web_acl" "this" {
   count       = var.enabled ? 1 : 0
   name        = var.name
-  description = "Regional WAF ACL for an ALB"
-  scope       = "REGIONAL"
+  description = var.scope == "CLOUDFRONT" ? "CloudFront WAF ACL for a web distribution" : "Regional WAF ACL for an ALB"
+  scope       = var.scope
 
   default_action {
     allow {}
@@ -84,12 +84,14 @@ resource "aws_wafv2_web_acl" "this" {
   tags = merge(var.tags, { Name = var.name })
 }
 
-# ── Associate with ALB ─────────────────────────────────────────────────────────
-# Gate only on `enabled` (a static value). The ALB ARN is computed at apply time,
-# so including it in `count` breaks `tofu plan` ("Invalid count argument"). When
-# enabled, alb_arn is always supplied by the caller.
+# ── Associate with ALB (REGIONAL only) ──────────────────────────────────────
+# CloudFront-scoped ACLs are NOT associated here — the distribution references
+# the ACL by ARN via its own `web_acl_id` (see the cdn module's web_acl_arn).
+# Gate on static values only (`enabled`, `scope`); alb_arn is computed at apply
+# time, so it can't go in `count`. When REGIONAL+enabled the caller always
+# supplies alb_arn.
 resource "aws_wafv2_web_acl_association" "this" {
-  count        = var.enabled ? 1 : 0
+  count        = var.enabled && var.scope == "REGIONAL" ? 1 : 0
   resource_arn = var.alb_arn
   web_acl_arn  = aws_wafv2_web_acl.this[0].arn
 }

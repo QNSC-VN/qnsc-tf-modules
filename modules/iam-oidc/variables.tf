@@ -48,7 +48,52 @@ variable "ecs_passrole_pattern" {
 variable "infra_apply_policy_arn" {
   type        = string
   default     = "arn:aws:iam::aws:policy/AdministratorAccess"
-  description = "Managed policy attached to the infra-apply role. Start broad, tighten later."
+  description = <<-EOT
+    Managed policy attached to the infra-apply role. A full-stack `tofu apply`
+    legitimately needs broad create/update/delete across many services, so this
+    stays broad; the real controls are (1) environment-scoped trust
+    (infra_apply_subjects) and (2) the blast-radius guardrail below.
+  EOT
+}
+
+variable "infra_plan_subjects" {
+  type        = list(string)
+  default     = null
+  description = <<-EOT
+    OIDC `sub` claims allowed to assume the read-only infra-plan role. Defaults
+    to PRs + main of the infra repo. Never use a bare "repo:org/repo:*".
+  EOT
+}
+
+variable "infra_apply_subjects" {
+  type        = list(string)
+  default     = null
+  description = <<-EOT
+    OIDC `sub` claims allowed to assume the infra-apply role. Defaults to the
+    shared/develop/production GitHub Environments of the infra repo, so a bare
+    branch or PR can never assume it. Override for products with different
+    environment names (e.g. qnsc-infra uses ["...:environment:bootstrap",
+    "...:environment:security-baseline"]).
+  EOT
+}
+
+variable "infra_apply_guardrail" {
+  type = object({
+    state_bucket_arn     = string
+    lock_table_arn       = string
+    oidc_provider_arn    = string
+    kms_key_arn          = string
+    artifacts_bucket_arn = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+    When set, attaches an explicit-Deny guardrail to the infra-apply role that a
+    broad Allow (AdministratorAccess) cannot override. Protects the platform's
+    own foundations from a buggy/compromised product apply in a single account:
+    denies deleting the state bucket / lock table / OIDC provider, scheduling
+    deletion or rewriting the policy of the platform CMK, and creating IAM
+    users/access-keys or touching AWS Organizations. Leave null to skip.
+  EOT
 }
 
 variable "web_deploy_environments" {

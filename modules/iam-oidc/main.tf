@@ -18,6 +18,26 @@ locals {
   ecr_arn    = "arn:aws:ecr:*:${local.account_id}:repository/${var.ecr_repository_pattern}"
   passrole   = "arn:aws:iam::${local.account_id}:role/${var.ecs_passrole_pattern}"
   infra_sub  = "repo:${var.github_org}/${var.infra_repo_name}"
+
+  # Trust subjects — bound to specific refs/environments, NEVER the whole repo.
+  # In a monorepo (app + infra in one repo) a "repo:org/repo:*" sub would let any
+  # feature branch or PR that requests id-token assume these roles. Instead:
+  #   - infra_plan  → PRs + main only (read-only tofu plan)
+  #   - infra_apply → only from inside the gated GitHub Environments, so the AWS
+  #     trust boundary matches the environment reviewer gate. A branch/PR with no
+  #     `environment:` in its job emits sub `...:ref:...`/`...:pull_request`, which
+  #     is NOT in this list → cannot assume apply, regardless of branch protection.
+  # Both are overridable for products whose environments differ (e.g. qnsc-infra
+  # uses bootstrap/security-baseline).
+  infra_plan_subjects = var.infra_plan_subjects != null ? var.infra_plan_subjects : [
+    "${local.infra_sub}:pull_request",
+    "${local.infra_sub}:ref:refs/heads/main",
+  ]
+  infra_apply_subjects = var.infra_apply_subjects != null ? var.infra_apply_subjects : [
+    "${local.infra_sub}:environment:shared",
+    "${local.infra_sub}:environment:develop",
+    "${local.infra_sub}:environment:production",
+  ]
 }
 
 # ── Per-environment app deploy roles ──────────────────────────────────────────
@@ -145,7 +165,7 @@ resource "aws_iam_role" "infra_plan" {
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
-        StringLike   = { "token.actions.githubusercontent.com:sub" = "${local.infra_sub}:*" }
+        StringLike   = { "token.actions.githubusercontent.com:sub" = local.infra_plan_subjects }
       }
     }]
   })
@@ -174,8 +194,9 @@ resource "aws_iam_role" "infra_apply" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          # Matches: ref:refs/heads/main, environment:shared, environment:develop, environment:production
-          "token.actions.githubusercontent.com:sub" = "${local.infra_sub}:*"
+          # Environment-scoped only (shared/develop/production by default) — the
+          # apply role is unassumable from a bare branch/PR. See local.infra_apply_subjects.
+          "token.actions.githubusercontent.com:sub" = local.infra_apply_subjects
         }
       }
     }]
@@ -187,6 +208,63 @@ resource "aws_iam_role" "infra_apply" {
 resource "aws_iam_role_policy_attachment" "infra_apply_admin" {
   role       = aws_iam_role.infra_apply.name
   policy_arn = var.infra_apply_policy_arn
+}
+
+# Blast-radius guardrail — explicit Deny beats the AdministratorAccess Allow, so
+# even a compromised/buggy apply cannot destroy the platform's own foundations
+# (state, locks, OIDC trust, the CMK) or mint IAM users/keys. Optional: only when
+# var.infra_apply_guardrail is provided.
+resource "aws_iam_role_policy" "infra_apply_guardrail" {
+  count = var.infra_apply_guardrail != null ? 1 : 0
+
+  name = "${var.product}-infra-apply-guardrail"
+  role = aws_iam_role.infra_apply.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ProtectStateAndArtifacts"
+        Effect = "Deny"
+        Action = ["s3:DeleteBucket", "s3:DeleteBucketPolicy", "s3:PutBucketPolicy", "s3:PutEncryptionConfiguration"]
+        Resource = compact([
+          var.infra_apply_guardrail.state_bucket_arn,
+          try(var.infra_apply_guardrail.artifacts_bucket_arn, null),
+        ])
+      },
+      {
+        Sid      = "ProtectLockTable"
+        Effect   = "Deny"
+        Action   = ["dynamodb:DeleteTable"]
+        Resource = [var.infra_apply_guardrail.lock_table_arn]
+      },
+      {
+        Sid    = "ProtectOidcProvider"
+        Effect = "Deny"
+        Action = [
+          "iam:DeleteOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProviderThumbprint",
+          "iam:RemoveClientIDFromOpenIDConnectProvider",
+        ]
+        Resource = [var.infra_apply_guardrail.oidc_provider_arn]
+      },
+      {
+        Sid      = "ProtectPlatformCMK"
+        Effect   = "Deny"
+        Action   = ["kms:ScheduleKeyDeletion", "kms:DisableKey", "kms:PutKeyPolicy"]
+        Resource = [var.infra_apply_guardrail.kms_key_arn]
+      },
+      {
+        Sid    = "NoHumanIdentitiesOrOrgChanges"
+        Effect = "Deny"
+        Action = [
+          "iam:CreateUser", "iam:CreateAccessKey", "iam:CreateLoginProfile", "iam:CreateSAMLProvider",
+          "organizations:*", "account:*",
+        ]
+        Resource = ["*"]
+      },
+    ]
+  })
 }
 
 # ── Web (SPA) deploy roles — S3 sync + CloudFront invalidation ────────────────

@@ -98,6 +98,7 @@ resource "aws_cloudfront_distribution" "web" {
   default_root_object = "index.html"
   price_class         = var.price_class
   aliases             = var.aliases
+  web_acl_id          = var.web_acl_arn # CLOUDFRONT-scoped WAFv2 ACL ARN (null = no WAF)
 
   origin {
     domain_name              = aws_s3_bucket.web.bucket_regional_domain_name
