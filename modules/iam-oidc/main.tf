@@ -89,6 +89,9 @@ resource "aws_iam_role_policy" "deploy" {
         Action = [
           "ecs:DescribeTaskDefinition", "ecs:RegisterTaskDefinition", "ecs:DescribeServices",
           "ecs:UpdateService", "ecs:RunTask", "ecs:DescribeTasks", "ecs:ListTaskDefinitions",
+          # ListTasks is required by the post-deploy verify step (verify-ecs-deploy),
+          # which enumerates running tasks to confirm the new image tag is live.
+          "ecs:ListTasks",
         ]
         Resource = "*"
       },
