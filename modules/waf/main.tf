@@ -91,7 +91,11 @@ resource "aws_wafv2_web_acl" "this" {
 # time, so it can't go in `count`. When REGIONAL+enabled the caller always
 # supplies alb_arn.
 resource "aws_wafv2_web_acl_association" "this" {
-  count        = var.enabled && var.scope == "REGIONAL" ? 1 : 0
+  count = var.enabled && var.scope == "REGIONAL" ? 1 : 0
+  # alb_arn is a computed ARN supplied by the caller at apply time; tflint's
+  # deep-check sees only the empty default. Resource is count-gated on
+  # enabled+REGIONAL, so it never associates with an empty ARN.
+  # tflint-ignore: aws_wafv2_web_acl_association_invalid_resource_arn
   resource_arn = var.alb_arn
   web_acl_arn  = aws_wafv2_web_acl.this[0].arn
 }
