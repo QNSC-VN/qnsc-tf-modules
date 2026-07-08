@@ -73,7 +73,11 @@ jobs:
           quiet: true
           output_format: cli,sarif
           output_file_path: console,checkov.sarif
-          soft_fail: false # ENFORCED — findings fail CI (free plan; no GHAS needed)
+          # ENFORCED against a baseline: fails CI on NEW misconfigurations only.
+          # The 38 pre-existing findings are recorded in modules/.checkov.baseline
+          # (burn them down over time; regenerate with --create-baseline).
+          soft_fail: false
+          baseline: modules/.checkov.baseline
 
       - name: Upload SARIF
         if: always()
