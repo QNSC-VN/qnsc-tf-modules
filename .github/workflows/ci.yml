@@ -73,7 +73,7 @@ jobs:
           quiet: true
           output_format: cli,sarif
           output_file_path: console,checkov.sarif
-          soft_fail: true # report findings without failing CI initially; flip to false to enforce
+          soft_fail: false # ENFORCED — findings fail CI (free plan; no GHAS needed)
 
       - name: Upload SARIF
         if: always()
