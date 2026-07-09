@@ -66,6 +66,11 @@ variable "alb_path_patterns" {
   type    = list(string)
   default = ["/*"]
 }
+variable "alb_host_headers" {
+  type        = list(string)
+  default     = []
+  description = "Host headers for the ALB listener rule. Set for shared-ALB host-based routing (e.g. [\"rally-api.qnsc.vn\"]); empty keeps the rule path-only."
+}
 variable "health_check_path" {
   type    = string
   default = "/health"
@@ -124,6 +129,11 @@ variable "use_spot" {
   type        = bool
   default     = false
   description = "Prefer FARGATE_SPOT (weight 4) with FARGATE fallback (weight 1). Saves ~70% on Fargate compute in dev."
+}
+variable "additional_containers" {
+  type        = any
+  default     = []
+  description = "Extra sidecar container definitions merged into the task definition (e.g. a Valkey cache sidecar in dev). Each element is a full ECS container definition object; reachable from the app at localhost via the shared task network namespace."
 }
 variable "tags" {
   type    = map(string)

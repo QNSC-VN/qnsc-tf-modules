@@ -117,7 +117,7 @@ resource "aws_ecs_task_definition" "this" {
   execution_role_arn       = aws_iam_role.execution.arn
   task_role_arn            = aws_iam_role.task.arn
 
-  container_definitions = jsonencode([
+  container_definitions = jsonencode(concat([
     {
       name      = var.service_name
       image     = var.image_uri
@@ -145,7 +145,7 @@ resource "aws_ecs_task_definition" "this" {
         startPeriod = 30
       } : null
     }
-  ])
+  ], var.additional_containers))
 
   tags = var.tags
 }
@@ -185,6 +185,17 @@ resource "aws_lb_listener_rule" "this" {
   condition {
     path_pattern {
       values = var.alb_path_patterns
+    }
+  }
+
+  # Host-based routing for a shared ALB (multiple products/hostnames on one
+  # listener). Empty alb_host_headers keeps the rule path-only (single-tenant ALB).
+  dynamic "condition" {
+    for_each = length(var.alb_host_headers) > 0 ? [1] : []
+    content {
+      host_header {
+        values = var.alb_host_headers
+      }
     }
   }
 }
@@ -239,7 +250,12 @@ resource "aws_ecs_service" "this" {
   }
 
   lifecycle {
-    ignore_changes = [desired_count]
+    # CD (backend-deploy) registers new task-def revisions out of band via
+    # ecs update-service; ignore task_definition so a `tofu apply` never rolls
+    # the running deployment back to the module's baseline revision. Terraform
+    # still owns the baseline task def (image/env/secrets); the next deploy
+    # derives from it. desired_count is ignored for the same reason (autoscaling).
+    ignore_changes = [desired_count, task_definition]
   }
 
   tags = var.tags

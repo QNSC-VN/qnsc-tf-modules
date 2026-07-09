@@ -50,6 +50,8 @@ module "api" {
 | `desired_count` / `min_count` / `max_count` | `1/1/4` | Service + autoscaling bounds |
 | `cpu_target_pct` / `memory_target_pct` | `65 / 75` | Autoscaling targets |
 | `attach_alb` | `true` | Create target group + listener rule |
+| `alb_path_patterns` / `alb_host_headers` | `["/*"]` / `[]` | Listener-rule conditions. Set `alb_host_headers` for shared-ALB host-based routing (e.g. `["rally-api.qnsc.vn"]`) |
+| `additional_containers` | `[]` | Extra sidecar container definitions merged into the task (e.g. a Valkey cache sidecar in dev; reachable at `localhost`) |
 | `secret_arns` / `kms_key_arn` | `[]` / `""` | Secrets injection (+ KMS decrypt) |
 | `sqs_queue_arns` / `sns_topic_arns` / `s3_bucket_arns` | `[]` | Task-role runtime access |
 | `enable_ecs_exec` | `false` | ECS Exec for debugging |

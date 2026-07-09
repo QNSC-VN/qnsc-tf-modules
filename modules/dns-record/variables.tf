@@ -56,3 +56,14 @@ variable "comment" {
   default     = ""
   description = "Free-text comment shown in the Cloudflare dashboard (e.g. which stack manages this)."
 }
+
+variable "allow_overwrite" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+    Adopt an existing Cloudflare record of the same name/type on create instead
+    of failing with "record already exists". Defaults to true so a rebuild after
+    a `state rm` teardown (which leaves the live record orphaned) cleanly takes
+    the record over and repoints it, rather than erroring on the create.
+  EOT
+}

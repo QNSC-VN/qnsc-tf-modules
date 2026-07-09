@@ -15,6 +15,10 @@ no copy-paste drift.
 The canonical list of shared modules, their **current version**, and the pin to
 use. Bump a consumer by changing its `?ref=<module>-vX.Y.Z`.
 
+> **This table is the source of truth for the version to pin.** When a module is
+> re-tagged, update its **Latest** here in the same PR. If the table and the git
+> tags disagree, the git tags win — but that's a bug to fix here.
+
 ### Core infrastructure
 
 | Module | Latest | Pin | Purpose |
@@ -48,9 +52,9 @@ use. Bump a consumer by changing its `?ref=<module>-vX.Y.Z`.
 | [`oneshot-task`](modules/oneshot-task) | `v1.0.0` | `oneshot-task-v1.0.0` | Generic one-shot Fargate task def (DB migrator/backfill) |
 | [`dev-scheduler`](modules/dev-scheduler) | `v1.1.0` | `dev-scheduler-v1.1.0` | Off-hours stop RDS + scale ECS to 0 (dev cost saver) |
 
-> **Updating versions:** [Renovate](https://docs.renovatebot.com/) opens PRs when
-> a module gets a new tag (consumer repos carry a `renovate.json`). Bump tags via
-> `release-please` on merge to `main`.
+> **Updating versions:** update the **Latest** column above in the same PR that
+> re-tags a module. [Renovate](https://docs.renovatebot.com/) then opens bump PRs
+> in consumer repos (they carry a `renovate.json`) so products pick up the new pin.
 
 ---
 
