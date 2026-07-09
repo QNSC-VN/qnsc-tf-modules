@@ -34,4 +34,8 @@ resource "cloudflare_record" "this" {
   proxied = var.proxied
   ttl     = var.proxied ? 1 : var.ttl # proxied records must use ttl=1 (automatic)
   comment = var.comment
+
+  # Adopt a pre-existing record (e.g. one orphaned by a `state rm` teardown)
+  # rather than failing the create with "record already exists".
+  allow_overwrite = var.allow_overwrite
 }
