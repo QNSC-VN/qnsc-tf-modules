@@ -50,7 +50,6 @@ use. Bump a consumer by changing its `?ref=<module>-vX.Y.Z`.
 | :----- | :----- | :-- | :------ |
 | [`observability`](modules/observability) | `v1.0.0` | `observability-v1.0.0` | CloudWatch alarms (ECS/ALB/RDS) + SNS + dashboard |
 | [`oneshot-task`](modules/oneshot-task) | `v1.0.0` | `oneshot-task-v1.0.0` | Generic one-shot Fargate task def (DB migrator/backfill) |
-| [`dev-scheduler`](modules/dev-scheduler) | `v1.1.0` | `dev-scheduler-v1.1.0` | Off-hours stop RDS + scale ECS to 0 (dev cost saver) |
 
 > **Updating versions:** update the **Latest** column above in the same PR that
 > re-tags a module. [Renovate](https://docs.renovatebot.com/) then opens bump PRs
