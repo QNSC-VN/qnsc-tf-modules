@@ -112,7 +112,7 @@ resource "aws_instance" "nat" {
   subnet_id              = aws_subnet.public[var.azs[0]].id
   source_dest_check      = false
   vpc_security_group_ids = [aws_security_group.nat_instance[0].id]
-  tags                   = merge(var.tags, { Name = "${var.name}-nat-instance", AutoStop = "true" })
+  tags                   = merge(var.tags, { Name = "${var.name}-nat-instance" })
 }
 
 # ── Route tables ──────────────────────────────────────────────────────────────

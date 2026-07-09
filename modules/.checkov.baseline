@@ -65,41 +65,6 @@
             ]
         },
         {
-            "file": "/dev-scheduler/main.tf",
-            "findings": [
-                {
-                    "resource": "aws_iam_role_policy.lambda",
-                    "check_ids": [
-                        "CKV_AWS_290",
-                        "CKV_AWS_355"
-                    ]
-                },
-                {
-                    "resource": "aws_lambda_function.this",
-                    "check_ids": [
-                        "CKV_AWS_115",
-                        "CKV_AWS_116",
-                        "CKV_AWS_117",
-                        "CKV_AWS_173",
-                        "CKV_AWS_272",
-                        "CKV_AWS_50"
-                    ]
-                },
-                {
-                    "resource": "aws_scheduler_schedule.start",
-                    "check_ids": [
-                        "CKV_AWS_297"
-                    ]
-                },
-                {
-                    "resource": "aws_scheduler_schedule.stop",
-                    "check_ids": [
-                        "CKV_AWS_297"
-                    ]
-                }
-            ]
-        },
-        {
             "file": "/ecs-service/main.tf",
             "findings": [
                 {

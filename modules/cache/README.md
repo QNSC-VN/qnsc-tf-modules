@@ -7,7 +7,7 @@ Valkey (Redis-compatible) on ElastiCache. Two modes:
 | `serverless` (default) | ElastiCache Serverless, auto-scaling | ~$90/mo floor | prod |
 | `node` | single `cache.t4g.micro`, encrypted in-transit + at-rest | ~$11/mo | dev |
 
-> Serverless cannot be stopped (so the dev-scheduler can't help it). For real
+> Serverless cannot be stopped. For real
 > dev savings, use `mode = "node"`.
 
 ## Usage
