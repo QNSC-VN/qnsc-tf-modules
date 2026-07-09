@@ -250,7 +250,12 @@ resource "aws_ecs_service" "this" {
   }
 
   lifecycle {
-    ignore_changes = [desired_count]
+    # CD (backend-deploy) registers new task-def revisions out of band via
+    # ecs update-service; ignore task_definition so a `tofu apply` never rolls
+    # the running deployment back to the module's baseline revision. Terraform
+    # still owns the baseline task def (image/env/secrets); the next deploy
+    # derives from it. desired_count is ignored for the same reason (autoscaling).
+    ignore_changes = [desired_count, task_definition]
   }
 
   tags = var.tags
