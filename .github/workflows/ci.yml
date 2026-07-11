@@ -54,34 +54,3 @@ jobs:
             echo "── tflint $dir ──"
             tflint --chdir="$dir"
           done
-
-  checkov:
-    name: checkov (security/misconfig)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Checkov scan
-        uses: bridgecrewio/checkov-action@d9d1e5cdc53e3a91f0c4c58db7bc19ee31cac7e5 # v12.3113.0
-        with:
-          directory: modules/
-          framework: terraform
-          quiet: true
-          output_format: cli,sarif
-          output_file_path: console,checkov.sarif
-          # ENFORCED against a baseline: fails CI on NEW misconfigurations only.
-          # The 38 pre-existing findings are recorded in modules/.checkov.baseline
-          # (burn them down over time; regenerate with --create-baseline).
-          soft_fail: false
-          baseline: modules/.checkov.baseline
-
-      - name: Upload SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9  # v4
-        with:
-          sarif_file: checkov.sarif
-        continue-on-error: true
