@@ -1,0 +1,20 @@
+{
+  "modules/alb": "1.0.0",
+  "modules/alb-logs": "1.0.0",
+  "modules/app-bucket": "1.0.0",
+  "modules/cache": "1.0.0",
+  "modules/cf-edge": "1.0.0",
+  "modules/dns-record": "1.1.0",
+  "modules/ecr": "1.1.0",
+  "modules/ecs-cluster": "1.0.0",
+  "modules/ecs-service": "1.3.0",
+  "modules/iam-oidc": "1.3.0",
+  "modules/messaging": "1.0.0",
+  "modules/network": "1.1.2",
+  "modules/observability": "1.0.0",
+  "modules/oneshot-task": "1.0.0",
+  "modules/pages-web": "1.0.0",
+  "modules/rds": "1.1.0",
+  "modules/secrets": "1.0.0",
+  "modules/waf": "1.1.0"
+}
