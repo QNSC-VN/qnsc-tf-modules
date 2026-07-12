@@ -17,8 +17,3 @@ output "infra_apply_role_arn" {
   value       = aws_iam_role.infra_apply.arn
   description = "ARN of the infra apply role."
 }
-
-output "web_deploy_role_arns" {
-  value       = { for k, v in aws_iam_role.web_deploy : k => v.arn }
-  description = "Map of env → per-environment web (SPA) deploy role ARN."
-}
