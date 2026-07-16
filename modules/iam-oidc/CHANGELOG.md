@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/iam-oidc-v2.0.0...iam-oidc-v2.0.1) (2026-07-16)
+
+
+### Bug Fixes
+
+* **iam-oidc:** grant ecr:DescribeImages to ecr-push role ([#21](https://github.com/QNSC-VN/qnsc-tf-modules/issues/21)) ([041c4ea](https://github.com/QNSC-VN/qnsc-tf-modules/commit/041c4ea19026e87007829986222ea49e1e13f100))
+
 ## [2.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/iam-oidc-v1.3.0...iam-oidc-v2.0.0) (2026-07-16)
 
 
