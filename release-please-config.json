@@ -10,7 +10,7 @@
     "modules/app-bucket": { "component": "app-bucket" },
     "modules/cache": { "component": "cache" },
     "modules/cf-edge": { "component": "cf-edge" },
-    "modules/cf-r2": { "component": "cf-r2" },
+    "modules/cf-r2": { "component": "cf-r2", "initial-version": "1.0.0" },
     "modules/dns-record": { "component": "dns-record" },
     "modules/ecr": { "component": "ecr" },
     "modules/ecs-cluster": { "component": "ecs-cluster" },
