@@ -147,6 +147,10 @@ resource "aws_iam_role_policy" "ecr_push" {
         Action = [
           "ecr:BatchCheckLayerAvailability", "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage",
           "ecr:PutImage", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart", "ecr:CompleteLayerUpload",
+          # DescribeImages: the tag→prod promote job resolves the promoted image
+          # digest by tag (aws ecr describe-images) after re-tagging. Without it
+          # the resolve fails AccessDenied and the prod deploy aborts.
+          "ecr:DescribeImages",
         ]
         Resource = local.ecr_arn
       },
