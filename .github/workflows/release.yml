@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   release:
-    uses: QNSC-VN/qnsc-ci/.github/workflows/release-please.yml@v1
+    uses: QNSC-VN/qnsc-ci/.github/workflows/release-please.yml@v1.4.0
     with:
       manifest_file: .release-please-manifest.json
     secrets:
