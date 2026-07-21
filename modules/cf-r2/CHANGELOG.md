@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/cf-r2-v1.0.0...cf-r2-v1.1.0) (2026-07-21)
+
+
+### Features
+
+* **cf-r2:** add optional custom domain for public buckets ([#27](https://github.com/QNSC-VN/qnsc-tf-modules/issues/27)) ([84ed547](https://github.com/QNSC-VN/qnsc-tf-modules/commit/84ed547b7c6e1c4b05d0e63f3261a1132c6ea1f4))
+
 ## 1.0.0 (2026-07-16)
 
 
