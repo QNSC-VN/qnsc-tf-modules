@@ -79,3 +79,30 @@ variable "lifecycle_rules" {
     conditions internally.
   EOT
 }
+
+variable "custom_domain" {
+  type = object({
+    hostname = string
+    zone_id  = string
+  })
+  default = null
+
+  description = <<-EOT
+    Attach a Cloudflare custom domain to this bucket, making its objects
+    PUBLICLY readable by key over that hostname and cached at the edge.
+
+    ONLY set this for a bucket that holds non-sensitive assets. Attaching a
+    domain to a bucket of permission-gated files makes every object readable by
+    anyone who can guess or obtain a key, silently bypassing every authorization
+    check in the application — there is no error and no log line when that
+    happens.
+
+    Leave null (the default) for private buckets.
+
+    NOTE: edge cache TTL is NOT set here — the R2 custom-domain resource has no
+    such attribute. Objects are served with Cloudflare's default caching; add a
+    cloudflare_ruleset in the edge stack if a specific TTL is required. Keys
+    embed a uuid, so a changed asset always gets a new key and stale cache
+    entries are not a correctness concern.
+  EOT
+}

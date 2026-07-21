@@ -74,3 +74,18 @@ resource "cloudflare_r2_bucket_lifecycle" "this" {
     }
   }]
 }
+
+# Custom domain — PUBLIC read access over a Cloudflare-proxied hostname, with
+# edge caching. Gated on var.custom_domain being non-null so a private bucket
+# can never acquire one by accident (see the variable's description).
+resource "cloudflare_r2_custom_domain" "this" {
+  count = var.custom_domain == null ? 0 : 1
+
+  account_id   = var.account_id
+  bucket_name  = cloudflare_r2_bucket.this.id
+  domain       = var.custom_domain.hostname
+  zone_id      = var.custom_domain.zone_id
+  enabled      = true
+  min_tls      = "1.2"
+  jurisdiction = var.jurisdiction
+}

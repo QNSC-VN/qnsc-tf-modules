@@ -20,3 +20,15 @@ output "endpoint" {
     forcePathStyle=true. The host varies by jurisdiction.
   EOT
 }
+
+output "public_base_url" {
+  value = try(
+    "https://${cloudflare_r2_custom_domain.this[0].domain}",
+    null,
+  )
+  description = <<-EOT
+    Public HTTPS origin for this bucket, or null when no custom domain is
+    attached. Inject as CDN_PUBLIC_ASSETS_BASE_URL — and ONLY ever from a bucket
+    that is meant to be world-readable.
+  EOT
+}
