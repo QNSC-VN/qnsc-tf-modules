@@ -114,6 +114,17 @@ variable "s3_bucket_arns" {
   default     = []
   description = "S3 bucket ARNs the task may read/write (get/put/delete + list)."
 }
+variable "task_secret_arns" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    Secret ARNs (wildcards allowed) the TASK role may read at RUNTIME via
+    secretsmanager:GetSecretValue — e.g. an app resolving per-connection
+    credentials on demand from a DB-driven config. Distinct from `secret_arns`,
+    which is the EXECUTION role reading secrets once at container start for env
+    injection.
+  EOT
+}
 
 # ── Misc ──────────────────────────────────────────────────────────────────────
 variable "log_retention_days" {

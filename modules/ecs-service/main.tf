@@ -107,6 +107,31 @@ resource "aws_iam_role_policy" "task_s3" {
   policy = data.aws_iam_policy_document.task_s3[0].json
 }
 
+# Runtime secret reads by the task role (e.g. an app resolving per-connection
+# credentials on demand). Scoped to the given ARNs + kms:Decrypt on the CMK.
+# Separate from the execution-role boot-time injection above.
+data "aws_iam_policy_document" "task_secrets" {
+  count = length(var.task_secret_arns) > 0 ? 1 : 0
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = var.task_secret_arns
+  }
+  dynamic "statement" {
+    for_each = var.kms_key_arn != "" ? [1] : []
+    content {
+      actions   = ["kms:Decrypt"]
+      resources = [var.kms_key_arn]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "task_secrets" {
+  count  = length(var.task_secret_arns) > 0 ? 1 : 0
+  name   = "task-secrets-access"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.task_secrets[0].json
+}
+
 # ── Task definition ───────────────────────────────────────────────────────────
 resource "aws_ecs_task_definition" "this" {
   family                   = local.full_name

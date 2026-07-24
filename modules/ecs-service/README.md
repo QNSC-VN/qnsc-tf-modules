@@ -52,8 +52,9 @@ module "api" {
 | `attach_alb` | `true` | Create target group + listener rule |
 | `alb_path_patterns` / `alb_host_headers` | `["/*"]` / `[]` | Listener-rule conditions. Set `alb_host_headers` for shared-ALB host-based routing (e.g. `["rally-api.qnsc.vn"]`) |
 | `additional_containers` | `[]` | Extra sidecar container definitions merged into the task (e.g. a Valkey cache sidecar in dev; reachable at `localhost`) |
-| `secret_arns` / `kms_key_arn` | `[]` / `""` | Secrets injection (+ KMS decrypt) |
+| `secret_arns` / `kms_key_arn` | `[]` / `""` | Execution-role secrets injection at boot (+ KMS decrypt) |
 | `sqs_queue_arns` / `sns_topic_arns` / `s3_bucket_arns` | `[]` | Task-role runtime access |
+| `task_secret_arns` | `[]` | Secret ARNs (wildcards allowed) the **task** role may read at runtime via `GetSecretValue` — e.g. resolving per-connection credentials on demand. Distinct from `secret_arns` (execution role, boot-time) |
 | `enable_ecs_exec` | `false` | ECS Exec for debugging |
 | `log_retention_days` | `30` | Log retention |
 
