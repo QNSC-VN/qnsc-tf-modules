@@ -19,6 +19,11 @@ locals {
   passrole   = "arn:aws:iam::${local.account_id}:role/${var.ecs_passrole_pattern}"
   infra_sub  = "repo:${var.github_org}/${var.infra_repo_name}"
 
+  # Scoped to this product's own secret prefix. The trailing `*` also absorbs the
+  # 6-character random suffix Secrets Manager appends to every secret ARN
+  # (`rally/production/cookie-secret-0sHpOW`), which a bare name never matches.
+  secret_arns = "arn:aws:secretsmanager:*:${local.account_id}:secret:${var.product}/*"
+
   # Trust subjects — bound to specific refs/environments, NEVER the whole repo.
   # In a monorepo (app + infra in one repo) a "repo:org/repo:*" sub would let any
   # feature branch or PR that requests id-token assume these roles. Instead:
@@ -105,6 +110,22 @@ resource "aws_iam_role_policy" "deploy" {
         }
       },
       { Sid = "Logs", Effect = "Allow", Action = ["logs:DescribeLogGroups"], Resource = "*" },
+      {
+        # Lets the deploy job PREFLIGHT that every secret its task definitions
+        # inject actually holds a value. Terraform creates secret containers but
+        # values are populated out of band, and an empty container is accepted by
+        # RegisterTaskDefinition — the failure only surfaces minutes later as an
+        # ECS ResourceInitializationError plus a rollback that never names the
+        # secret. Metadata is enough to detect that.
+        #
+        # Deliberately NOT GetSecretValue: the deploy role must never be able to
+        # read a secret's contents. DescribeSecret and ListSecretVersionIds return
+        # names, ARNs and version ids only.
+        Sid      = "SecretsMetadataForPreflight"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:DescribeSecret", "secretsmanager:ListSecretVersionIds"]
+        Resource = local.secret_arns
+      },
     ]
   })
 }
