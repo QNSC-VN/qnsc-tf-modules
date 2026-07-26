@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/iam-oidc-v2.0.1...iam-oidc-v2.1.0) (2026-07-26)
+
+
+### Features
+
+* **iam-oidc:** grant deploy roles secret metadata reads ([#32](https://github.com/QNSC-VN/qnsc-tf-modules/issues/32)) ([eedc168](https://github.com/QNSC-VN/qnsc-tf-modules/commit/eedc1685c47fe1ffe2598049f36295870fd94ac4))
+
 ## [2.0.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/iam-oidc-v2.0.0...iam-oidc-v2.0.1) (2026-07-16)
 
 
