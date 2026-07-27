@@ -4,5 +4,6 @@ output "alarm_topic_arn" {
 }
 
 output "dashboard_name" {
-  value = aws_cloudwatch_dashboard.this.dashboard_name
+  value       = one(aws_cloudwatch_dashboard.this[*].dashboard_name)
+  description = "Dashboard name, or null when create_dashboard is false."
 }

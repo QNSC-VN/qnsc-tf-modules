@@ -66,6 +66,45 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   tags                = var.tags
 }
 
+# Closes the one real gap in this set: every other alarm fires on a SYMPTOM of load
+# (CPU, latency, 5xx), so a service whose tasks are simply not running looks quiet.
+# UnHealthyHostCount is the direct signal, and it lives in AWS/ApplicationELB — free
+# and native, so it needs no Container Insights, which nothing else here reads either.
+#
+# Scoped per TARGET GROUP, not per load balancer, because the ALB is shared across
+# products: a LoadBalancer-only dimension would aggregate rally and opshub into one
+# number and page the wrong team.
+resource "aws_cloudwatch_metric_alarm" "target_unhealthy" {
+  # Guarded on alb_arn like every other ALB alarm here. Without it, `local.alb_suffix`
+  # is "" and the alarm is created with an empty LoadBalancer dimension — it matches no
+  # metric and can never fire, which is worse than having no alarm because it looks like
+  # coverage.
+  for_each = var.alb_arn != "" ? var.target_group_arns : {}
+
+  alarm_name  = "${var.name}-${each.key}-targets-unhealthy"
+  namespace   = "AWS/ApplicationELB"
+  metric_name = "UnHealthyHostCount"
+  dimensions = {
+    LoadBalancer = local.alb_suffix
+    TargetGroup  = replace(each.value, "/^.*:(targetgroup\\/.*)$/", "$1")
+  }
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 3
+  threshold           = var.thresholds.unhealthy_hosts
+  comparison_operator = "GreaterThanThreshold"
+  # Missing data is NOT healthy here: a target group with no registered targets
+  # publishes nothing at all, which is exactly the outage this exists to catch.
+  #
+  # That makes the alarm wrong for any environment where zero tasks is a NORMAL state —
+  # an off-hours cost-saver that scales services to 0 would hold it permanently in ALARM.
+  # Wire `target_group_arns` only for environments expected to be always-on.
+  treat_missing_data = "breaching"
+  alarm_actions      = [aws_sns_topic.alarms.arn]
+  ok_actions         = [aws_sns_topic.alarms.arn]
+  tags               = var.tags
+}
+
 resource "aws_cloudwatch_metric_alarm" "alb_latency" {
   count               = var.alb_arn != "" ? 1 : 0
   alarm_name          = "${var.name}-alb-latency-high"
@@ -129,7 +168,12 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
 }
 
 # ── Dashboard ────────────────────────────────────────────────────────────────
+# Optional, unlike the alarms above. CloudWatch gives 3 dashboards free per ACCOUNT
+# and then charges $3/mo each, so a dashboard per environment per product starts
+# billing at the fourth one — and an environment nobody watches is the wrong one to
+# pay for. The alarms are what page someone; this is what you open afterwards.
 resource "aws_cloudwatch_dashboard" "this" {
+  count          = var.create_dashboard ? 1 : 0
   dashboard_name = var.name
   dashboard_body = jsonencode({
     widgets = concat(

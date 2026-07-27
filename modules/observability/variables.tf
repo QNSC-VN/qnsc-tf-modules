@@ -39,8 +39,32 @@ variable "thresholds" {
     rds_cpu_pct     = optional(number, 85)
     rds_free_bytes  = optional(number, 2147483648) # 2 GiB
     rds_connections = optional(number, 100)
+    unhealthy_hosts = optional(number, 0) # any unhealthy target is worth knowing about
   })
   default = {}
+}
+
+variable "target_group_arns" {
+  type        = map(string)
+  default     = {}
+  description = <<-EOT
+    Service name => ALB target group ARN, for the per-service UnHealthyHostCount alarm.
+    Empty creates no health alarms — pass the `target_group_arn` output of each
+    ecs-service that attaches to the ALB.
+  EOT
+}
+
+variable "create_dashboard" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+    Create the CloudWatch dashboard. Alarms are created regardless.
+
+    CloudWatch bills dashboards per ACCOUNT: three are free, every one after that is
+    $3/mo. One dashboard per environment per product crosses that line at the fourth,
+    so turn this off for environments nobody actively watches. Defaults to true so
+    existing callers keep their dashboard on upgrade.
+  EOT
 }
 
 variable "tags" {
