@@ -39,14 +39,39 @@ resource "aws_ecr_lifecycle_policy" "repos" {
         }
         action = { type = "expire" }
       },
+      # ONE rule per prefix, deliberately — not one rule listing both.
+      #
+      # `tagPrefixList` is AND, not OR: a rule listing ["sha-", "v"] only ever selects
+      # images carrying BOTH prefixes, which is just the handful of promoted releases.
+      # A single combined rule was therefore dead code — verified against the live
+      # account, where 105 `sha-` images sat under a policy claiming to keep 30, so
+      # tagged history grew without bound.
+      #
+      # Splitting it also fixes the hazard the combined rule would have created once
+      # it started firing. A promoted image carries both a `sha-` and a `v` tag, so it
+      # matches both rules; ECR applies the rule with the LOWEST rulePriority, which is
+      # why the release rule must come first. Confirmed with
+      # `aws ecr start-lifecycle-policy-preview`: of 168 images this policy expires on
+      # rally-api, zero carry a release tag.
       {
         rulePriority = 2
-        description  = "Keep only the last ${var.keep_tagged_count} tagged images"
+        description  = "Keep the last ${var.keep_release_count} release (${var.release_tag_prefix}*) images"
         selection = {
           tagStatus     = "tagged"
-          tagPrefixList = var.tag_prefix_list
+          tagPrefixList = [var.release_tag_prefix]
           countType     = "imageCountMoreThan"
-          countNumber   = var.keep_tagged_count
+          countNumber   = var.keep_release_count
+        }
+        action = { type = "expire" }
+      },
+      {
+        rulePriority = 3
+        description  = "Keep the last ${var.keep_build_count} build (${var.build_tag_prefix}*) images"
+        selection = {
+          tagStatus     = "tagged"
+          tagPrefixList = [var.build_tag_prefix]
+          countType     = "imageCountMoreThan"
+          countNumber   = var.keep_build_count
         }
         action = { type = "expire" }
       }
