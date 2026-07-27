@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/secrets-v1.1.0...secrets-v2.0.0) (2026-07-27)
+## [2.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecr-v1.1.0...ecr-v2.0.0) (2026-07-27)
 
 
 ### ⚠ BREAKING CHANGES
@@ -10,10 +10,3 @@
 ### Features
 
 * cost-posture fixes across ecs-cluster, ecs-service, observability, secrets, ecr ([#36](https://github.com/QNSC-VN/qnsc-tf-modules/issues/36)) ([9a2eb3b](https://github.com/QNSC-VN/qnsc-tf-modules/commit/9a2eb3bea6eb3995234cab5938f137b2c69efb0f))
-
-## [1.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/secrets-v1.0.0...secrets-v1.1.0) (2026-07-16)
-
-
-### Features
-
-* **dns-record:** adopt orphaned records via allow_overwrite ([#4](https://github.com/QNSC-VN/qnsc-tf-modules/issues/4)) ([e93b1ed](https://github.com/QNSC-VN/qnsc-tf-modules/commit/e93b1ed72b81aa23327f0139efcfd62bc9b6008f))
