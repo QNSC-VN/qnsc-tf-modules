@@ -12,7 +12,7 @@
   "modules/messaging": "1.0.0",
   "modules/network": "1.1.2",
   "modules/observability": "1.0.1",
-  "modules/observability-agent": "0.0.0",
+  "modules/observability-agent": "1.0.0",
   "modules/oneshot-task": "1.0.1",
   "modules/pages-web": "1.0.1",
   "modules/rds": "1.1.0",
