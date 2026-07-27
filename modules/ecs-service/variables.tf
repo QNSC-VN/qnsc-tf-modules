@@ -94,6 +94,26 @@ variable "secret_arns" {
   default     = []
   description = "Secret ARNs the execution role may read (for secrets injection)."
 }
+variable "ssm_parameter_arns" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    SSM Parameter Store ARNs the EXECUTION role may read for boot-time env injection
+    (`ssm:GetParameters`). Separate from `secret_arns` because Secrets Manager and
+    Parameter Store are different APIs — ECS injects from both identically, but the
+    IAM action differs, so mixing them in one list grants the wrong permission.
+  EOT
+}
+
+variable "task_ssm_parameter_arns" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    SSM Parameter Store ARNs the TASK role may read at RUNTIME. The Parameter Store
+    counterpart of `task_secret_arns`.
+  EOT
+}
+
 variable "kms_key_arn" {
   type        = string
   default     = ""
@@ -140,6 +160,25 @@ variable "use_spot" {
   type        = bool
   default     = false
   description = "Prefer FARGATE_SPOT (weight 4) with FARGATE fallback (weight 1). Saves ~70% on Fargate compute in dev."
+}
+variable "cpu_architecture" {
+  type        = string
+  default     = "X86_64"
+  description = <<-EOT
+    Fargate CPU architecture: "X86_64" or "ARM64".
+
+    ARM64 (Graviton) bills roughly 20% less per vCPU-hour and GB-hour for identical
+    sizing. It requires an image built for linux/arm64 — an x86 image on an ARM64 task
+    fails at container start with "image Manifest does not contain descriptor matching
+    platform", so flip this only together with the image build.
+
+    Defaults to X86_64 so existing callers keep their current architecture on upgrade.
+  EOT
+
+  validation {
+    condition     = contains(["X86_64", "ARM64"], var.cpu_architecture)
+    error_message = "cpu_architecture must be X86_64 or ARM64."
+  }
 }
 variable "additional_containers" {
   type        = any

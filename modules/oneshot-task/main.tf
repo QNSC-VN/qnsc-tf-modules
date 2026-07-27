@@ -25,6 +25,13 @@ resource "aws_ecs_task_definition" "this" {
   execution_role_arn       = var.execution_role_arn
   task_role_arn            = var.task_role_arn
 
+  # Must match the architecture of `var.image`, and therefore the services that run
+  # alongside it — the migrator is built from the same Dockerfile in the same CI job.
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = var.cpu_architecture
+  }
+
   container_definitions = jsonencode([{
     name        = var.container_name
     image       = var.image

@@ -30,6 +30,22 @@ variable "memory" {
   default = 1024
 }
 
+variable "cpu_architecture" {
+  type        = string
+  default     = "X86_64"
+  description = <<-EOT
+    Fargate CPU architecture: "X86_64" or "ARM64". Must match the architecture
+    `var.image` was built for; an x86 image on an ARM64 task fails at container start.
+    Keep it equal to the ecs-service value in the same environment, since both images
+    come out of the same build. Defaults to X86_64 so existing callers are unaffected.
+  EOT
+
+  validation {
+    condition     = contains(["X86_64", "ARM64"], var.cpu_architecture)
+    error_message = "cpu_architecture must be X86_64 or ARM64."
+  }
+}
+
 variable "execution_role_arn" {
   type        = string
   description = "ECS execution role (pull image, read secrets, write logs)."

@@ -5,8 +5,17 @@ variable "name" {
 
 variable "container_insights" {
   type        = string
-  default     = "enhanced"
-  description = "CloudWatch Container Insights mode: \"enhanced\", \"enabled\", or \"disabled\"."
+  default     = "enabled"
+  description = <<-EOT
+    CloudWatch Container Insights mode: "enhanced", "enabled", or "disabled".
+
+    Defaults to "enabled" (cluster- and service-level metrics). It used to default to
+    "enhanced", which adds per-task and per-container metrics that CloudWatch bills as
+    CUSTOM metrics at $0.07 each: four clusters silently inheriting that default
+    produced 606 metric-months (~$42) on the July 2026 bill, and the count scales with
+    task churn rather than with traffic. Ask for "enhanced" per environment while
+    debugging a container-level resource problem, then put it back.
+  EOT
 
   validation {
     condition     = contains(["enhanced", "enabled", "disabled"], var.container_insights)
