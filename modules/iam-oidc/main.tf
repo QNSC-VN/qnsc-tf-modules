@@ -126,6 +126,24 @@ resource "aws_iam_role_policy" "deploy" {
         Action   = ["secretsmanager:DescribeSecret", "secretsmanager:ListSecretVersionIds"]
         Resource = local.secret_arns
       },
+      {
+        # Same preflight, Parameter Store side — app secrets live here now because
+        # standard SSM parameters carry no per-parameter monthly charge.
+        #
+        # Also deliberately NOT GetParameter: DescribeParameters returns names and
+        # VERSION numbers only. That is all the check needs, because the secrets module
+        # creates each parameter holding a placeholder with ignore_changes on the value,
+        # so version 1 means "never populated" and version >1 means an operator set it.
+        # This is a stronger guarantee than the Secrets Manager path above gets, with
+        # strictly less privilege.
+        #
+        # Resource must be "*": DescribeParameters is a list operation and SSM does not
+        # support resource-level permissions on it. It exposes no values.
+        Sid      = "SsmMetadataForPreflight"
+        Effect   = "Allow"
+        Action   = ["ssm:DescribeParameters"]
+        Resource = "*"
+      },
     ]
   })
 }
