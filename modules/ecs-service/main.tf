@@ -32,10 +32,24 @@ resource "aws_iam_role_policy_attachment" "execution_managed" {
 }
 
 data "aws_iam_policy_document" "execution_secrets" {
-  count = length(var.secret_arns) > 0 ? 1 : 0
-  statement {
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = var.secret_arns
+  count = length(var.secret_arns) + length(var.ssm_parameter_arns) > 0 ? 1 : 0
+
+  # Two services, two actions. ECS reads Secrets Manager and SSM Parameter Store the
+  # same way in `secrets[].valueFrom`, but they are different APIs, so a parameter ARN
+  # listed under `secret_arns` would be granted an action that does not apply to it.
+  dynamic "statement" {
+    for_each = length(var.secret_arns) > 0 ? [1] : []
+    content {
+      actions   = ["secretsmanager:GetSecretValue"]
+      resources = var.secret_arns
+    }
+  }
+  dynamic "statement" {
+    for_each = length(var.ssm_parameter_arns) > 0 ? [1] : []
+    content {
+      actions   = ["ssm:GetParameters"]
+      resources = var.ssm_parameter_arns
+    }
   }
   # Decrypt KMS-encrypted secrets when a CMK is provided.
   dynamic "statement" {
@@ -48,7 +62,7 @@ data "aws_iam_policy_document" "execution_secrets" {
 }
 
 resource "aws_iam_role_policy" "execution_secrets" {
-  count  = length(var.secret_arns) > 0 ? 1 : 0
+  count  = length(var.secret_arns) + length(var.ssm_parameter_arns) > 0 ? 1 : 0
   name   = "secrets-access"
   role   = aws_iam_role.execution.id
   policy = data.aws_iam_policy_document.execution_secrets[0].json
@@ -111,10 +125,21 @@ resource "aws_iam_role_policy" "task_s3" {
 # credentials on demand). Scoped to the given ARNs + kms:Decrypt on the CMK.
 # Separate from the execution-role boot-time injection above.
 data "aws_iam_policy_document" "task_secrets" {
-  count = length(var.task_secret_arns) > 0 ? 1 : 0
-  statement {
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = var.task_secret_arns
+  count = length(var.task_secret_arns) + length(var.task_ssm_parameter_arns) > 0 ? 1 : 0
+
+  dynamic "statement" {
+    for_each = length(var.task_secret_arns) > 0 ? [1] : []
+    content {
+      actions   = ["secretsmanager:GetSecretValue"]
+      resources = var.task_secret_arns
+    }
+  }
+  dynamic "statement" {
+    for_each = length(var.task_ssm_parameter_arns) > 0 ? [1] : []
+    content {
+      actions   = ["ssm:GetParameter", "ssm:GetParameters"]
+      resources = var.task_ssm_parameter_arns
+    }
   }
   dynamic "statement" {
     for_each = var.kms_key_arn != "" ? [1] : []
@@ -126,7 +151,7 @@ data "aws_iam_policy_document" "task_secrets" {
 }
 
 resource "aws_iam_role_policy" "task_secrets" {
-  count  = length(var.task_secret_arns) > 0 ? 1 : 0
+  count  = length(var.task_secret_arns) + length(var.task_ssm_parameter_arns) > 0 ? 1 : 0
   name   = "task-secrets-access"
   role   = aws_iam_role.task.id
   policy = data.aws_iam_policy_document.task_secrets[0].json
@@ -141,6 +166,14 @@ resource "aws_ecs_task_definition" "this" {
   memory                   = var.memory
   execution_role_arn       = aws_iam_role.execution.arn
   task_role_arn            = aws_iam_role.task.arn
+
+  # Stated explicitly rather than left to Fargate's X86_64 default, so the
+  # architecture the image was built for is visible in the task definition and a
+  # mismatch shows up in a plan instead of at container start.
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = var.cpu_architecture
+  }
 
   container_definitions = jsonencode(concat([
     {
