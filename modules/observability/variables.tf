@@ -27,7 +27,22 @@ variable "alb_arn" {
 variable "rds_instance_id" {
   type        = string
   default     = ""
-  description = "RDS DBInstanceIdentifier. Empty = skip RDS alarms."
+  description = <<-EOT
+    DB instance IDENTIFIER (e.g. `rally-prod`) — the value RDS publishes as the
+    CloudWatch `DBInstanceIdentifier` dimension. Empty skips the RDS alarms.
+
+    NOT the resource id. `aws_db_instance.id` returns `db-XXXX…` on AWS provider 5.x,
+    and passing that produced six alarms permanently in INSUFFICIENT_DATA — matching no
+    metric while looking like coverage. Use the rds module's `identifier` output.
+  EOT
+
+  validation {
+    # An RDS resource id is `db-` followed by 26 uppercase alphanumerics. No real
+    # identifier looks like that (they are lowercase, and cannot contain consecutive
+    # hyphens), so this catches the exact mistake without rejecting anything valid.
+    condition     = !can(regex("^db-[A-Z0-9]{26}$", var.rds_instance_id))
+    error_message = "rds_instance_id looks like an RDS RESOURCE id (db-XXXX…), not an identifier. Pass the rds module's `identifier` output — the resource id matches no CloudWatch dimension."
+  }
 }
 
 variable "thresholds" {
