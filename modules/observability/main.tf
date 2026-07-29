@@ -2,6 +2,13 @@ locals {
   # ALB CloudWatch dimension is the arn suffix: app/<name>/<id>
   alb_suffix   = var.alb_arn != "" ? replace(var.alb_arn, "/^.*:loadbalancer\\//", "") : ""
   ecs_services = toset(var.ecs_service_names)
+
+  # TargetGroup CloudWatch dimension is likewise the arn suffix: targetgroup/<name>/<id>.
+  # Derived once because both per-target-group alarms below need it.
+  tg_dimensions = {
+    for name, arn in var.target_group_arns :
+    name => replace(arn, "/^.*:(targetgroup\\/.*)$/", "$1")
+  }
 }
 
 # ── Alarm topic ──────────────────────────────────────────────────────────────
@@ -79,14 +86,18 @@ resource "aws_cloudwatch_metric_alarm" "target_unhealthy" {
   # is "" and the alarm is created with an empty LoadBalancer dimension — it matches no
   # metric and can never fire, which is worse than having no alarm because it looks like
   # coverage.
-  for_each = var.alb_arn != "" ? var.target_group_arns : {}
+  # Gated on `monitor_target_health` as well as the target-group map, so a caller can
+  # keep the per-target-group LATENCY alarm below while opting out of this one. They
+  # used to share one switch, which forced an environment where zero tasks is normal
+  # to give up latency monitoring too.
+  for_each = var.alb_arn != "" && var.monitor_target_health ? var.target_group_arns : {}
 
   alarm_name  = "${var.name}-${each.key}-targets-unhealthy"
   namespace   = "AWS/ApplicationELB"
   metric_name = "UnHealthyHostCount"
   dimensions = {
     LoadBalancer = local.alb_suffix
-    TargetGroup  = replace(each.value, "/^.*:(targetgroup\\/.*)$/", "$1")
+    TargetGroup  = local.tg_dimensions[each.key]
   }
   statistic           = "Maximum"
   period              = 60
@@ -105,20 +116,78 @@ resource "aws_cloudwatch_metric_alarm" "target_unhealthy" {
   tags               = var.tags
 }
 
+# Latency, per TARGET GROUP and gated on traffic volume.
+#
+# Two defects in the previous LoadBalancer-scoped p95 alarm, both of which paged for
+# things nobody could act on:
+#
+#  1. The ALB is SHARED across products, so a LoadBalancer-only dimension aggregated
+#     rally and opshub into one p95 and named the result after whichever product's
+#     stack created it. `target_unhealthy` above already scopes per target group for
+#     exactly this reason; latency now matches.
+#
+#  2. A percentile over a handful of samples is not a percentile. On a pre-launch or
+#     low-traffic environment (measured: 0-6 requests per 5-minute period) p95 IS
+#     effectively the second-slowest single request, so ONE slow request held the
+#     alarm over the threshold for three consecutive periods and paged. That is noise
+#     that trains people to ignore the alarm, which is worse than no alarm.
+#
+# The metric-math expression suppresses the evaluation below `alb_latency_min_requests`
+# requests per period by returning 0 — chosen over a composite alarm because it stays
+# one resource with one history to read, and over raising the threshold because a high
+# threshold hides a real regression under load instead of ignoring an idle environment.
+# Missing RequestCount (a target group serving nothing publishes no datapoint) combines
+# with `notBreaching` below, so silence still reads as OK rather than as a breach.
 resource "aws_cloudwatch_metric_alarm" "alb_latency" {
-  count               = var.alb_arn != "" ? 1 : 0
-  alarm_name          = "${var.name}-alb-latency-high"
-  namespace           = "AWS/ApplicationELB"
-  metric_name         = "TargetResponseTime"
-  dimensions          = { LoadBalancer = local.alb_suffix }
-  extended_statistic  = "p95"
-  period              = 300
-  evaluation_periods  = 3
-  threshold           = var.thresholds.alb_latency_sec
+  for_each = var.alb_arn != "" ? var.target_group_arns : {}
+
+  alarm_name          = "${var.name}-${each.key}-alb-latency-high"
   comparison_operator = "GreaterThanThreshold"
+  threshold           = var.thresholds.alb_latency_sec
+  evaluation_periods  = 3
   treat_missing_data  = "notBreaching"
   alarm_actions       = [aws_sns_topic.alarms.arn]
-  tags                = var.tags
+  ok_actions          = [aws_sns_topic.alarms.arn]
+  alarm_description = join(" ", [
+    "p95 target response time above ${var.thresholds.alb_latency_sec}s for 15 minutes,",
+    "evaluated only in periods with at least ${var.thresholds.alb_latency_min_requests} requests.",
+  ])
+  tags = var.tags
+
+  metric_query {
+    id          = "gated_latency"
+    expression  = "IF(requests >= ${var.thresholds.alb_latency_min_requests}, latency, 0)"
+    label       = "p95 latency (periods with >= ${var.thresholds.alb_latency_min_requests} requests)"
+    return_data = true
+  }
+
+  metric_query {
+    id = "latency"
+    metric {
+      namespace   = "AWS/ApplicationELB"
+      metric_name = "TargetResponseTime"
+      dimensions = {
+        LoadBalancer = local.alb_suffix
+        TargetGroup  = local.tg_dimensions[each.key]
+      }
+      period = 300
+      stat   = "p95"
+    }
+  }
+
+  metric_query {
+    id = "requests"
+    metric {
+      namespace   = "AWS/ApplicationELB"
+      metric_name = "RequestCount"
+      dimensions = {
+        LoadBalancer = local.alb_suffix
+        TargetGroup  = local.tg_dimensions[each.key]
+      }
+      period = 300
+      stat   = "Sum"
+    }
+  }
 }
 
 # ── RDS alarms ───────────────────────────────────────────────────────────────
