@@ -51,10 +51,16 @@ variable "thresholds" {
     ecs_mem_pct     = optional(number, 85)
     alb_5xx_count   = optional(number, 20)
     alb_latency_sec = optional(number, 2)
-    rds_cpu_pct     = optional(number, 85)
-    rds_free_bytes  = optional(number, 2147483648) # 2 GiB
-    rds_connections = optional(number, 100)
-    unhealthy_hosts = optional(number, 0) # any unhealthy target is worth knowing about
+    # Traffic floor below which the latency alarm does not evaluate. A p95 over a
+    # handful of requests is the second-slowest request, not a percentile, so a
+    # single slow call would otherwise page an idle environment. 50 requests per
+    # 5-minute period is ~1 rps sustained: low enough that any environment under
+    # real use is covered, high enough that noise cannot reach the threshold.
+    alb_latency_min_requests = optional(number, 50)
+    rds_cpu_pct              = optional(number, 85)
+    rds_free_bytes           = optional(number, 2147483648) # 2 GiB
+    rds_connections          = optional(number, 100)
+    unhealthy_hosts          = optional(number, 0) # any unhealthy target is worth knowing about
   })
   default = {}
 }
@@ -63,9 +69,29 @@ variable "target_group_arns" {
   type        = map(string)
   default     = {}
   description = <<-EOT
-    Service name => ALB target group ARN, for the per-service UnHealthyHostCount alarm.
-    Empty creates no health alarms — pass the `target_group_arn` output of each
+    Service name => ALB target group ARN. Drives BOTH per-target-group alarms: response
+    latency and UnHealthyHostCount. Pass the `target_group_arn` output of each
     ecs-service that attaches to the ALB.
+
+    Empty creates neither. The ALB is shared across products, so a load-balancer-wide
+    dimension would aggregate every product into one number and page the wrong team —
+    which is why latency is scoped here rather than by `alb_arn` alone.
+  EOT
+}
+
+variable "monitor_target_health" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+    Create the per-target-group UnHealthyHostCount alarm.
+
+    It uses `treat_missing_data = "breaching"` because a target group with no registered
+    targets publishes no datapoint at all, which is the outage it exists to catch. That
+    makes it wrong wherever zero running tasks is a NORMAL state — an off-hours
+    cost-saver that scales services to 0 would hold it permanently in ALARM.
+
+    Set false there. The latency alarm is unaffected: it is gated on request volume, so
+    an environment scaled to zero simply never evaluates it.
   EOT
 }
 
