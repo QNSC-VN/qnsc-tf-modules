@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-v3.0.0...observability-v4.0.0) (2026-07-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **observability:** `alb_latency` moves from `count` to `for_each` and is renamed `<name>-<tg>-alb-latency-high`. It now requires `target_group_arns`; callers passing only `alb_arn` lose the latency alarm until they wire it.
+
+### Features
+
+* **observability:** scope the latency alarm per target group and gate it on traffic ([#40](https://github.com/QNSC-VN/qnsc-tf-modules/issues/40)) ([47d1360](https://github.com/QNSC-VN/qnsc-tf-modules/commit/47d136016492faf1c99c8daa826d33ee174d9199))
+
 ## [3.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-v2.0.0...observability-v3.0.0) (2026-07-28)
 
 
