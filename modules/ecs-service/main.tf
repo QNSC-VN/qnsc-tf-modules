@@ -320,7 +320,22 @@ resource "aws_ecs_service" "this" {
 }
 
 # ── Autoscaling ───────────────────────────────────────────────────────────────
+# ── Autoscaling ───────────────────────────────────────────────────────────────
+# Optional, because not every service wants it and one that does not is CHEAPER AND
+# SIMPLER without it.
+#
+# A service whose desired count is driven on a schedule — an environment awake in working
+# hours and asleep otherwise — cannot also have target-tracking policies. The two fight:
+# with a floor of 1 the scheduled scale-to-zero is restored within minutes, and with a
+# floor of 0 target tracking scales the service to zero mid-day and nothing brings it
+# back. Turning autoscaling off leaves `desired_count` (already under ignore_changes) as
+# the single owner, so the schedule is authoritative and no plan reports drift.
+#
+# The alternative — `ignore_changes` on min/max so scheduled actions can move them — was
+# tried and rejected: it silently swallows a later `min_count` change in a caller, which
+# turns "restore capacity at go-live" into an edit that appears to apply and does nothing.
 resource "aws_appautoscaling_target" "this" {
+  count              = var.enable_autoscaling ? 1 : 0
   max_capacity       = var.max_count
   min_capacity       = var.min_count
   resource_id        = "service/${var.cluster_name}/${aws_ecs_service.this.name}"
@@ -329,11 +344,12 @@ resource "aws_appautoscaling_target" "this" {
 }
 
 resource "aws_appautoscaling_policy" "cpu" {
+  count              = var.enable_autoscaling ? 1 : 0
   name               = "${local.full_name}-cpu"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.this.resource_id
-  scalable_dimension = aws_appautoscaling_target.this.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.this.service_namespace
+  resource_id        = aws_appautoscaling_target.this[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.this[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.this[0].service_namespace
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
@@ -347,11 +363,12 @@ resource "aws_appautoscaling_policy" "cpu" {
 
 # Memory-based scaling — a NestJS API can hit memory pressure before CPU.
 resource "aws_appautoscaling_policy" "memory" {
+  count              = var.enable_autoscaling ? 1 : 0
   name               = "${local.full_name}-memory"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.this.resource_id
-  scalable_dimension = aws_appautoscaling_target.this.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.this.service_namespace
+  resource_id        = aws_appautoscaling_target.this[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.this[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.this[0].service_namespace
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
