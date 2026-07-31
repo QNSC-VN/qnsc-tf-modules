@@ -112,3 +112,26 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "environment_idle" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    This environment is deliberately not serving traffic — scaled to zero, database
+    stopped, pre-launch or off-hours.
+
+    Suppresses every alarm whose premise is "this environment is serving traffic":
+    ECS CPU and memory, ALB 5xx, and unhealthy hosts. The RDS and latency alarms need no
+    special case — a stopped instance publishes nothing and reads as INSUFFICIENT_DATA,
+    and the latency alarm is already gated on request volume.
+
+    Why it exists: idling an environment turned its own alarms into a pager. With no
+    registered targets every request becomes a 503, so `HTTPCode_ELB_5XX_Count` clears
+    its threshold from a single browser tab reconnecting to an SSE endpoint. And a
+    service that scales to zero makes its CPU metric disappear, so a CPU alarm walks
+    OK -> INSUFFICIENT_DATA -> OK on every wake.
+
+    Set it back to false in the same change that restores capacity. An idle environment
+    with armed load alarms is noise; a LIVE environment without them is blind.
+  EOT
+}

@@ -1,7 +1,9 @@
 locals {
   # ALB CloudWatch dimension is the arn suffix: app/<name>/<id>
-  alb_suffix   = var.alb_arn != "" ? replace(var.alb_arn, "/^.*:loadbalancer\\//", "") : ""
-  ecs_services = toset(var.ecs_service_names)
+  alb_suffix = var.alb_arn != "" ? replace(var.alb_arn, "/^.*:loadbalancer\\//", "") : ""
+  # Empty while the environment is deliberately idle, which switches off every alarm
+  # whose premise is "this environment is serving traffic". See var.environment_idle.
+  ecs_services = var.environment_idle ? toset([]) : toset(var.ecs_service_names)
 
   # TargetGroup CloudWatch dimension is likewise the arn suffix: targetgroup/<name>/<id>.
   # Derived once because both per-target-group alarms below need it.
@@ -37,8 +39,12 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
   threshold           = var.thresholds.ecs_cpu_pct
   comparison_operator = "GreaterThanThreshold"
   alarm_actions       = [aws_sns_topic.alarms.arn]
-  ok_actions          = [aws_sns_topic.alarms.arn]
-  tags                = var.tags
+  # No ok_actions, matching ecs_mem below. CPU recovering is not news, and on a service
+  # that scales to zero the metric DISAPPEARS — so the alarm walks
+  # OK -> INSUFFICIENT_DATA -> OK on every sleep/wake cycle and mailed a
+  # "<service>-cpu-high" OK notification each time. Recipients read the name, not the
+  # transition, so a routine wake looked like a CPU incident.
+  tags = var.tags
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_mem" {
@@ -57,8 +63,16 @@ resource "aws_cloudwatch_metric_alarm" "ecs_mem" {
 }
 
 # ── ALB alarms ───────────────────────────────────────────────────────────────
+# NOT created while the environment is idle. `HTTPCode_ELB_5XX_Count` counts 5xx the
+# LOAD BALANCER generated, and an idled environment has no registered targets, so every
+# request it receives becomes a 503 by design — a browser tab left open on an SSE
+# endpoint reconnects hard enough to clear the threshold on its own, and inbound
+# webhooks add more. The alarm then reports the intended state as an incident.
+#
+# Same reasoning as target_unhealthy below: an alarm whose premise is "this environment
+# is serving traffic" cannot stay armed while the environment is deliberately not.
 resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
-  count               = var.alb_arn != "" ? 1 : 0
+  count               = var.alb_arn != "" && !var.environment_idle ? 1 : 0
   alarm_name          = "${var.name}-alb-5xx-high"
   namespace           = "AWS/ApplicationELB"
   metric_name         = "HTTPCode_ELB_5XX_Count"
@@ -90,7 +104,7 @@ resource "aws_cloudwatch_metric_alarm" "target_unhealthy" {
   # keep the per-target-group LATENCY alarm below while opting out of this one. They
   # used to share one switch, which forced an environment where zero tasks is normal
   # to give up latency monitoring too.
-  for_each = var.alb_arn != "" && var.monitor_target_health ? var.target_group_arns : {}
+  for_each = var.alb_arn != "" && var.monitor_target_health && !var.environment_idle ? var.target_group_arns : {}
 
   alarm_name  = "${var.name}-${each.key}-targets-unhealthy"
   namespace   = "AWS/ApplicationELB"
