@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/secrets-v2.0.0...secrets-v2.1.0) (2026-07-31)
+
+
+### Features
+
+* **secrets:** optionally bundle a secret set into one JSON secret ([#48](https://github.com/QNSC-VN/qnsc-tf-modules/issues/48)) ([ad2c10d](https://github.com/QNSC-VN/qnsc-tf-modules/commit/ad2c10dcc9df7281582ec55a2e2575374b252dd4))
+
 ## [2.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/secrets-v1.1.0...secrets-v2.0.0) (2026-07-27)
 
 
