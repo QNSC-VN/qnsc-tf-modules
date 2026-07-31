@@ -189,3 +189,22 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "enable_autoscaling" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+    Create the scalable target and the CPU/memory target-tracking policies.
+
+    Set FALSE for a service whose desired count is driven on a schedule — an environment
+    awake in working hours and asleep otherwise. The two mechanisms cannot coexist: with a
+    floor of 1 a scheduled scale-to-zero is restored within minutes, and with a floor of 0
+    target tracking scales the service to zero mid-day with nothing to bring it back.
+
+    With autoscaling off, `desired_count` (already under ignore_changes) is the single
+    owner, so the schedule is authoritative and no plan reports drift. It also removes the
+    two CloudWatch alarms Application Auto Scaling creates per policy.
+
+    `min_count`, `max_count` and the target percentages are ignored while false.
+  EOT
+}
