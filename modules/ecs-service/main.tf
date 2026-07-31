@@ -379,3 +379,33 @@ resource "aws_appautoscaling_policy" "memory" {
     scale_out_cooldown = 60
   }
 }
+
+# ── State moves for the enable_autoscaling toggle ─────────────────────────────
+#
+# `enable_autoscaling` gave these three resources a `count`, which changed their
+# addresses from `.this`/`.cpu`/`.memory` to `.this[0]`/`.cpu[0]`/`.memory[0]`. Without
+# these blocks a caller that simply bumps the module ref — changing no inputs and keeping
+# autoscaling on — gets a destroy-and-recreate of its scalable target and both policies,
+# because Terraform matches state to config by address and finds nothing at the old one.
+#
+# The plan shows that as ordinary churn, which is what makes it dangerous: adding a
+# `count` without a `moved` block is how an unrelated ElastiCache migration in this
+# organisation destroyed and recreated a running cache node. Same mistake, same shape.
+#
+# With these, an autoscaling-enabled caller plans `0 to add, 0 to change, 0 to destroy`.
+# Callers setting `enable_autoscaling = false` still get the destroy they asked for —
+# Terraform performs the move, then removes the instance the config no longer declares.
+moved {
+  from = aws_appautoscaling_target.this
+  to   = aws_appautoscaling_target.this[0]
+}
+
+moved {
+  from = aws_appautoscaling_policy.cpu
+  to   = aws_appautoscaling_policy.cpu[0]
+}
+
+moved {
+  from = aws_appautoscaling_policy.memory
+  to   = aws_appautoscaling_policy.memory[0]
+}
