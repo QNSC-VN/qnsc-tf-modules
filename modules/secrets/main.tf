@@ -26,6 +26,7 @@ locals {
 # container is unambiguous, and a task wired to a key that is not there fails to start
 # rather than booting on a blank. Values are written out of band and never enter state.
 resource "aws_secretsmanager_secret" "bundle" {
+  #checkov:skip=CKV2_AWS_57:Automatic rotation needs a rotation Lambda that knows how to change the credential at its SOURCE. These are values minted in other systems — an Entra client secret, a GitHub App private key, R2 access keys, signing keys the app derives from — so nothing here can rotate them; a schedule with no rotator would only ever fail. Rotation belongs to whichever system issues each value. See the module header.
   count = local.bundle_enabled && length(var.secret_names) > 0 ? 1 : 0
 
   name = "${var.prefix}/${var.bundle_name}"
@@ -41,6 +42,7 @@ resource "aws_secretsmanager_secret" "bundle" {
 }
 
 resource "aws_secretsmanager_secret" "app" {
+  #checkov:skip=CKV2_AWS_57:Same reason as the bundle above — these values are issued by other systems, so no rotation Lambda here can change them at source. Previously suppressed silently via modules/.checkov.baseline; moved inline so the reason travels with the code.
   for_each = local.create_standalone ? var.secret_names : {}
 
   name                    = "${var.prefix}/${each.key}"
