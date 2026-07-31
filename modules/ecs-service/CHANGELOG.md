@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.1.0...ecs-service-v2.1.1) (2026-07-31)
+
+
+### Bug Fixes
+
+* **ecs-service:** move autoscaling state instead of recreating it on upgrade ([#46](https://github.com/QNSC-VN/qnsc-tf-modules/issues/46)) ([a817c7d](https://github.com/QNSC-VN/qnsc-tf-modules/commit/a817c7d73cef35003e7a213a8e8307f651288e8f))
+
 ## [2.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.0.0...ecs-service-v2.1.0) (2026-07-31)
 
 
