@@ -11,7 +11,7 @@
   "modules/iam-oidc": "3.0.0",
   "modules/messaging": "1.0.0",
   "modules/network": "1.1.2",
-  "modules/observability": "4.0.0",
+  "modules/observability": "4.1.0",
   "modules/observability-agent": "1.0.0",
   "modules/oneshot-task": "2.0.0",
   "modules/pages-web": "1.0.1",

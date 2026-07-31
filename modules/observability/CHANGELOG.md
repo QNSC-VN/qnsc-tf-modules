@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-v4.0.0...observability-v4.1.0) (2026-07-31)
+
+
+### Features
+
+* **observability:** stop an idled environment paging about being idle ([#42](https://github.com/QNSC-VN/qnsc-tf-modules/issues/42)) ([47fc8bd](https://github.com/QNSC-VN/qnsc-tf-modules/commit/47fc8bd5a40829379b6720f01da731a7d0fa69b7))
+
 ## [4.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-v3.0.0...observability-v4.0.0) (2026-07-29)
 
 
