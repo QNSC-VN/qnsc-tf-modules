@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.0.0...ecs-service-v2.1.0) (2026-07-31)
+
+
+### Features
+
+* **ecs-service:** make autoscaling optional, for schedule-driven environments ([#44](https://github.com/QNSC-VN/qnsc-tf-modules/issues/44)) ([a8e8bbc](https://github.com/QNSC-VN/qnsc-tf-modules/commit/a8e8bbc3c58a5a6e5f0b1bf359ffb542fc778f58))
+
 ## [2.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v1.4.0...ecs-service-v2.0.0) (2026-07-27)
 
 
