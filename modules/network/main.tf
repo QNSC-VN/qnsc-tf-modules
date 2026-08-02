@@ -47,6 +47,16 @@ resource "aws_internet_gateway" "this" {
 }
 
 # ── NAT — Gateway (prod) or fck-nat instance (dev) ───────────────────────────
+# nat_type = "none": NO egress from private subnets at all. For an environment that is
+#   deliberately IDLE — zero tasks — where a NAT is $4.16/mo of pure waste. The private
+#   route tables are still created and associated, they simply carry no default route,
+#   so switching back is one variable and no address-space change.
+#
+#   DO NOT set this on an environment that runs tasks. Fargate needs egress to pull from
+#   ECR, fetch secrets, and reach any external service — and cloudflared cannot dial out
+#   to Cloudflare either, so a tunnelled task has no ingress. The failure is at task
+#   start (ResourceInitializationError) rather than at apply, so Terraform will not warn.
+#
 # nat_type = "gateway": AWS managed NAT Gateway — reliable, no ops, ~$33/mo.
 # nat_type = "instance": fck-nat t4g.nano in first public subnet — ~$3/mo,
 #   single AZ (acceptable for dev), community-maintained Graviton AMI.

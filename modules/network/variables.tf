@@ -54,8 +54,8 @@ variable "nat_type" {
       "instance" — fck-nat t4g.nano EC2 (~$3/mo). Use for dev (single AZ, saves ~$30/mo).
   EOT
   validation {
-    condition     = contains(["gateway", "instance"], var.nat_type)
-    error_message = "nat_type must be 'gateway' or 'instance'."
+    condition     = contains(["gateway", "instance", "none"], var.nat_type)
+    error_message = "nat_type must be 'gateway', 'instance' or 'none'."
   }
 }
 
