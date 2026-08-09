@@ -34,15 +34,67 @@ locals {
   #     is NOT in this list → cannot assume apply, regardless of branch protection.
   # Both are overridable for products whose environments differ (e.g. qnsc-infra
   # uses bootstrap/security-baseline).
-  infra_plan_subjects = var.infra_plan_subjects != null ? var.infra_plan_subjects : [
+  infra_plan_subjects_named = var.infra_plan_subjects != null ? var.infra_plan_subjects : [
     "${local.infra_sub}:pull_request",
     "${local.infra_sub}:ref:refs/heads/main",
   ]
-  infra_apply_subjects = var.infra_apply_subjects != null ? var.infra_apply_subjects : [
+  infra_apply_subjects_named = var.infra_apply_subjects != null ? var.infra_apply_subjects : [
     "${local.infra_sub}:environment:shared",
     "${local.infra_sub}:environment:develop",
     "${local.infra_sub}:environment:production",
   ]
+
+  # ── GitHub issues the OIDC `sub` in TWO shapes ──────────────────────────────
+  # Which one a repository gets is not a setting anyone here chose. Repositories that
+  # predate GitHub's change emit the familiar
+  #
+  #   repo:ORG/REPO:pull_request
+  #
+  # while newer ones emit an ID-augmented form that pins the org and repo by their
+  # immutable database ids:
+  #
+  #   repo:ORG@297362956/REPO@1312007613:pull_request
+  #
+  # A trust policy written for one silently rejects the other, and STS reports only
+  # "Not authorized to perform sts:AssumeRoleWithWebIdentity" — it never says the
+  # subject failed to match, so the obvious suspects (a missing account id, an
+  # unscoped org variable, a wrong role name) all look equally plausible. Reading it
+  # out of CloudTrail is the only way to see the claim that was actually presented.
+  #
+  # So every subject is trusted in both shapes. The rewrite is deliberately NOT a
+  # loose wildcard: `ORG@*` requires the literal `@` immediately after the org name,
+  # so it cannot match a different organisation whose name merely starts the same way
+  # (`QNSC-VN-evil`), and the same holds for the repository. `ORG*` would match both
+  # and is the trap to avoid here.
+  #
+  # Additive: a repository on the old form keeps matching the named subject, so this
+  # changes nothing for products already working.
+  immutable_sub_re      = "/^repo:([^/@]+)\\/([^:@]+):/"
+  immutable_sub_replace = "repo:$1@*/$2@*:"
+
+  infra_plan_subjects = distinct(concat(
+    local.infra_plan_subjects_named,
+    [for s in local.infra_plan_subjects_named : replace(s, local.immutable_sub_re, local.immutable_sub_replace)],
+  ))
+  infra_apply_subjects = distinct(concat(
+    local.infra_apply_subjects_named,
+    [for s in local.infra_apply_subjects_named : replace(s, local.immutable_sub_re, local.immutable_sub_replace)],
+  ))
+
+  # Same expansion for the per-environment deploy roles, whose subjects the CALLER
+  # supplies, and for the ECR push role.
+  deploy_subjects = {
+    for env, cfg in var.environments : env => distinct(concat(
+      cfg.allowed_subjects,
+      [for s in cfg.allowed_subjects : replace(s, local.immutable_sub_re, local.immutable_sub_replace)],
+    ))
+  }
+
+  ecr_push_subjects_named = [for repo in var.app_repo_names : "repo:${var.github_org}/${repo}:*"]
+  ecr_push_subjects = distinct(concat(
+    local.ecr_push_subjects_named,
+    [for s in local.ecr_push_subjects_named : replace(s, local.immutable_sub_re, local.immutable_sub_replace)],
+  ))
 }
 
 # ── Per-environment app deploy roles ──────────────────────────────────────────
@@ -60,7 +112,7 @@ resource "aws_iam_role" "deploy" {
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
-        StringLike   = { "token.actions.githubusercontent.com:sub" = each.value.allowed_subjects }
+        StringLike   = { "token.actions.githubusercontent.com:sub" = local.deploy_subjects[each.key] }
       }
     }]
   })
@@ -162,9 +214,7 @@ resource "aws_iam_role" "ecr_push" {
       Condition = {
         StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = [
-            for repo in var.app_repo_names : "repo:${var.github_org}/${repo}:*"
-          ]
+          "token.actions.githubusercontent.com:sub" = local.ecr_push_subjects
         }
       }
     }]
