@@ -13,9 +13,3 @@ variable "name" {
     serve production traffic.
   EOT
 }
-
-variable "tags" {
-  type        = map(string)
-  default     = {}
-  description = "Unused by Cloudflare; accepted so callers can pass their standard tag map."
-}
