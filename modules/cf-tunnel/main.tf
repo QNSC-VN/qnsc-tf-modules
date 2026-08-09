@@ -1,0 +1,32 @@
+# Cloudflare Tunnel — created and owned by Terraform.
+#
+# Replaces the "create it in the dashboard and paste the token into a secret" step that
+# every product carried before this module existed. The provider exposes the connector
+# token as a computed attribute, so nothing about a tunnel actually requires a human.
+#
+# WHAT THIS MEANS FOR STATE: `tunnel_token` is a live credential and it WILL be stored
+# in Terraform state. That is the trade this module makes. It is acceptable here because
+# the state bucket is KMS-encrypted and readable only by the infra-apply role, which
+# already holds AdministratorAccess — so the token grants nothing that reading the state
+# did not already imply. A product that cannot accept a credential in state should keep
+# creating tunnels out of band and pass the id in as a variable instead.
+
+# The tunnel's shared secret. Cloudflare requires a base64 value of at least 32 bytes;
+# `random_id` keeps it in state and stable, so the tunnel is not recreated on every plan.
+#
+# Rotating it means replacing the tunnel: change `keepers` deliberately, and expect a new
+# tunnel id, a new CNAME target and a new connector token.
+resource "random_id" "secret" {
+  byte_length = 32
+}
+
+resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
+  account_id = var.account_id
+  name       = var.name
+  secret     = random_id.secret.b64_std
+
+  # "local" means the connector is configured by the token it runs with, rather than by
+  # a remote configuration Cloudflare serves. That is what the cloudflared sidecar in the
+  # ECS task does — it is handed TUNNEL_TOKEN and needs nothing else.
+  config_src = "local"
+}
