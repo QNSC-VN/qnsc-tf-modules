@@ -16,7 +16,7 @@
   "modules/oneshot-task": "2.0.0",
   "modules/pages-web": "1.0.1",
   "modules/rds": "2.0.0",
-  "modules/secrets": "2.1.0",
+  "modules/secrets": "2.1.1",
   "modules/waf": "1.1.1",
   "modules/cf-r2": "1.1.0",
   "modules/cloudflare-turnstile": "1.0.0",
