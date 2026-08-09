@@ -8,7 +8,7 @@
   "modules/ecr": "2.0.0",
   "modules/ecs-cluster": "2.0.0",
   "modules/ecs-service": "2.1.1",
-  "modules/iam-oidc": "3.0.0",
+  "modules/iam-oidc": "3.0.1",
   "modules/messaging": "1.0.0",
   "modules/network": "1.1.2",
   "modules/observability": "4.1.0",

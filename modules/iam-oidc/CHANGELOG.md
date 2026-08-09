@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/iam-oidc-v3.0.0...iam-oidc-v3.0.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **iam-oidc:** trust both shapes of the GitHub OIDC subject ([#56](https://github.com/QNSC-VN/qnsc-tf-modules/issues/56)) ([670ae01](https://github.com/QNSC-VN/qnsc-tf-modules/commit/670ae013654d14c8dd32c6a605a9e9028619b3bd))
+
 ## [3.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/iam-oidc-v2.1.0...iam-oidc-v3.0.0) (2026-07-27)
 
 
