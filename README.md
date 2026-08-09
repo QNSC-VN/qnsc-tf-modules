@@ -40,7 +40,7 @@ use. Bump a consumer by changing its `?ref=<module>-vX.Y.Z`.
 
 | Module | Latest | Pin | Purpose |
 | :----- | :----- | :-- | :------ |
-| [`iam-oidc`](modules/iam-oidc) | `v3.1.0` | `iam-oidc-v3.1.0` | GitHub OIDC deploy roles (per-env, ecr-push, infra plan/apply, apply guardrail) |
+| [`iam-oidc`](modules/iam-oidc) | `v3.0.1` | `iam-oidc-v3.0.1` | GitHub OIDC deploy roles (per-env, ecr-push, infra plan/apply, apply guardrail) |
 | [`secrets`](modules/secrets) | `v1.0.0` | `secrets-v1.0.0` | Secrets Manager (empty secrets) + SSM Parameter Store |
 | [`waf`](modules/waf) | `v1.1.0` | `waf-v1.1.0` | WAFv2: managed rules + rate limit + logging (REGIONAL/ALB or CLOUDFRONT scope) |
 | [`alb-logs`](modules/alb-logs) | `v1.0.0` | `alb-logs-v1.0.0` | S3 bucket + policy for ALB access logs (prod forensics) |
