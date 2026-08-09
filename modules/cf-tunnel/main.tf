@@ -29,4 +29,21 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
   # a remote configuration Cloudflare serves. That is what the cloudflared sidecar in the
   # ECS task does — it is handed TUNNEL_TOKEN and needs nothing else.
   config_src = "local"
+
+  lifecycle {
+    # ADOPTING AN EXISTING TUNNEL DEPENDS ON THIS.
+    #
+    # A tunnel created by hand has a secret Cloudflare knows and nobody else does. On
+    # `tofu import`, Terraform would compare it against this module's freshly generated
+    # random_id and try to write the generated one — which changes the tunnel's secret
+    # and therefore its CONNECTOR TOKEN. Every running cloudflared then holds a token
+    # that no longer authenticates, and the API is unreachable until the next deploy
+    # ships the new one.
+    #
+    # Ignoring it makes an import a no-op: the tunnel keeps the secret it already has,
+    # `tunnel_token` is read back as a computed attribute either way, and the resource is
+    # simply adopted. It also means the secret is never rewritten in place for a tunnel
+    # this module created — rotating one is a deliberate replace, not a plan diff.
+    ignore_changes = [secret]
+  }
 }
