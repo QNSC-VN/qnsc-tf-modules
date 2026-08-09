@@ -19,10 +19,23 @@ output "secret_arns" {
 }
 
 output "secret_iam_arns" {
-  value = distinct(concat(
+  # NOT wrapped in distinct(), and that is load-bearing on a FIRST apply.
+  #
+  # These two lists are disjoint by construction — `create_standalone` and `use_bundle`
+  # select which resources exist — so there is nothing to deduplicate. But distinct()
+  # over values that do not exist yet returns a list of UNKNOWN LENGTH, because Terraform
+  # cannot tell whether two unknown strings will turn out equal.
+  #
+  # That unknown length propagates into the consumer: ecs-service gates its execution
+  # policy on `count = length(var.secret_arns) > 0`, and a count it cannot resolve fails
+  # the plan outright with "The count value depends on resource attributes that cannot be
+  # determined until apply". An existing environment plans fine because the ARNs are
+  # already in state — so this only ever breaks the first apply of a new environment,
+  # which is exactly when nobody has a working plan to compare against.
+  value = concat(
     [for v in aws_secretsmanager_secret.app : v.arn],
     [for v in aws_secretsmanager_secret.bundle : v.arn],
-  ))
+  )
 
   description = <<-EOT
     Distinct ARNs of the secret CONTAINERS that exist, for the execution role's
