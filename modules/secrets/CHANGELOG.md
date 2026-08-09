@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/secrets-v2.1.0...secrets-v2.1.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **secrets:** make secret_iam_arns plannable before the secrets exist ([#59](https://github.com/QNSC-VN/qnsc-tf-modules/issues/59)) ([655670b](https://github.com/QNSC-VN/qnsc-tf-modules/commit/655670b021da999fde1346629adbaa3b0e79f582))
+
 ## [2.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/secrets-v2.0.0...secrets-v2.1.0) (2026-07-31)
 
 
