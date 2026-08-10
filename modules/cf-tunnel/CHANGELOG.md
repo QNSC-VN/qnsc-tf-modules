@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/cf-tunnel-v0.1.0...cf-tunnel-v0.1.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **cf-tunnel:** route the tunnel, or it 503s everything ([#62](https://github.com/QNSC-VN/qnsc-tf-modules/issues/62)) ([46a325b](https://github.com/QNSC-VN/qnsc-tf-modules/commit/46a325bb569eadbea0acbfa9aca96aa3fe8cec03))
+
 ## 0.1.0 (2026-08-09)
 
 
