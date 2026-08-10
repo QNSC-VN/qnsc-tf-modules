@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/cf-tunnel-v0.1.1...cf-tunnel-v0.2.0) (2026-08-10)
+
+
+### Features
+
+* **cf-tunnel:** make routing optional so an existing tunnel can be adopted safely ([#65](https://github.com/QNSC-VN/qnsc-tf-modules/issues/65)) ([60e8917](https://github.com/QNSC-VN/qnsc-tf-modules/commit/60e891768974cb66e2df74d8e5a870684f5bece3))
+
 ## [0.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/cf-tunnel-v0.1.0...cf-tunnel-v0.1.1) (2026-08-10)
 
 
