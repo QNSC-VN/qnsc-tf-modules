@@ -25,8 +25,8 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
   name       = var.name
   secret     = random_id.secret.b64_std
 
-  # "cloudflare", NOT "local". This is the difference between a working tunnel and one
-  # that answers 503 to everything.
+  # Defaults to "cloudflare" — routing served to the connector by Cloudflare, which is
+  # what the ingress rules below write.
   #
   # "local" tells cloudflared its routing comes from a local config file or a --url flag.
   # A sidecar handed only TUNNEL_TOKEN has neither, so it connects successfully — QUIC up,
@@ -34,9 +34,9 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
   # config (if any) nor from the cli" and returns 503 for every request. The tunnel looks
   # healthy from every angle except the one that matters.
   #
-  # "cloudflare" means the routing is served to the connector by Cloudflare, and the
-  # ingress rules below are what it serves.
-  config_src = "cloudflare"
+  # Overridable so an EXISTING tunnel can be adopted without its configuration being
+  # rewritten by the import. See the variable.
+  config_src = var.config_src
 
   lifecycle {
     # ADOPTING AN EXISTING TUNNEL DEPENDS ON THIS.
@@ -59,6 +59,13 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
 # ── Routing ───────────────────────────────────────────────────────────────────
 # A tunnel with no ingress rule is inert: it connects, reports healthy, and 503s every
 # request. Creating the tunnel without this is the trap the resource above describes.
+#
+# OPTIONAL, and empty `hostname` is the escape hatch for adoption: a tunnel that already
+# has routing configured elsewhere (a dashboard-created one, say) can be brought under
+# Terraform WITHOUT this module rewriting rules nobody has compared. Cloudflare's
+# configuration API is a whole-document PUT, so writing a partial rule set silently
+# discards anything the existing configuration had that this module does not know about.
+# Adopt first, move routing in a second, deliberate change.
 #
 # The catch-all matters as much as the hostname rule. Cloudflare requires the LAST rule
 # to have no hostname, and without it the configuration is rejected.

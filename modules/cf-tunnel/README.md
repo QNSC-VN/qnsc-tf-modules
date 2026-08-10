@@ -28,6 +28,16 @@ in as a variable. Both shapes work.
 
 ## Adopting a tunnel that already exists
 
+Adopt in TWO steps. The first must not change anything.
+
+**Step 1 — take ownership of the tunnel, touch nothing else.** Leave `hostname` empty so
+no configuration resource is created, and set `config_src` to whatever the tunnel already
+has. Cloudflare's configuration API is a whole-document PUT, so writing a partial rule set
+silently discards anything the current configuration has that you have not reproduced.
+
+**Step 2 — move routing under Terraform, once the rules have been compared.** Set
+`hostname` and `service` to match what the tunnel serves today, and read the plan.
+
 Import rather than replace, or the hostname's CNAME target changes and every running
 connector is left holding a token that no longer authenticates:
 

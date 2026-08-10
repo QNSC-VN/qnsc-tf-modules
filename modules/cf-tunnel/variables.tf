@@ -36,3 +36,25 @@ variable "service" {
     namespace, so the application is reachable without exposing a port.
   EOT
 }
+
+variable "config_src" {
+  type    = string
+  default = "cloudflare"
+
+  description = <<-EOT
+    Where the connector gets its routing: "cloudflare" (served by Cloudflare, what this
+    module manages) or "local" (a config file or --url on the connector itself).
+
+    ADOPTING AN EXISTING TUNNEL: set this to whatever the tunnel already has, or the
+    import produces a diff that rewrites how a working connector is configured. A
+    dashboard-created tunnel with a public hostname is normally "cloudflare".
+
+    "local" is almost always wrong for a sidecar handed only TUNNEL_TOKEN — it has no
+    local config, so it connects, reports healthy, and returns 503 to everything.
+  EOT
+
+  validation {
+    condition     = contains(["cloudflare", "local"], var.config_src)
+    error_message = "config_src must be \"cloudflare\" or \"local\"."
+  }
+}
