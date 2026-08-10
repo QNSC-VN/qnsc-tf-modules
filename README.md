@@ -34,7 +34,7 @@ use. Bump a consumer by changing its `?ref=<module>-vX.Y.Z`.
 | [`app-bucket`](modules/app-bucket) | `v1.0.0` | `app-bucket-v1.0.0` | Private KMS-encrypted S3 bucket (app uploads) with TLS-only policy |
 | [`pages-web`](modules/pages-web) | `v1.0.0` | `pages-web-v1.0.0` | Cloudflare Pages project + custom domain (SPA hosting — replaced S3+CloudFront) |
 | [`dns-record`](modules/dns-record) | `v1.0.0` | `dns-record-v1.0.0` | Single Cloudflare DNS record (proxied-aware) |
-| [`cf-tunnel`](modules/cf-tunnel) | `v0.2.0` | `cf-tunnel-v0.2.0` | Cloudflare Tunnel + connector token (replaces creating one by hand) |
+| [`cf-tunnel`](modules/cf-tunnel) | `v0.1.1` | `cf-tunnel-v0.1.1` | Cloudflare Tunnel + connector token (replaces creating one by hand) |
 
 ### Security & access
 
