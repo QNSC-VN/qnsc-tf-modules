@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/cf-tunnel-v0.2.0...cf-tunnel-v0.2.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **cf-tunnel:** allow config_src to be left unset for adoption ([#67](https://github.com/QNSC-VN/qnsc-tf-modules/issues/67)) ([509e2d3](https://github.com/QNSC-VN/qnsc-tf-modules/commit/509e2d340692a44b351e69c9e1b7f49a4dc55687))
+
 ## [0.2.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/cf-tunnel-v0.1.1...cf-tunnel-v0.2.0) (2026-08-10)
 
 
