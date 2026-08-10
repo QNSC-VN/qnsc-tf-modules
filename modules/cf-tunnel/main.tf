@@ -25,10 +25,18 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
   name       = var.name
   secret     = random_id.secret.b64_std
 
-  # "local" means the connector is configured by the token it runs with, rather than by
-  # a remote configuration Cloudflare serves. That is what the cloudflared sidecar in the
-  # ECS task does — it is handed TUNNEL_TOKEN and needs nothing else.
-  config_src = "local"
+  # "cloudflare", NOT "local". This is the difference between a working tunnel and one
+  # that answers 503 to everything.
+  #
+  # "local" tells cloudflared its routing comes from a local config file or a --url flag.
+  # A sidecar handed only TUNNEL_TOKEN has neither, so it connects successfully — QUIC up,
+  # every precheck passing — and then logs "No ingress rules were defined in provided
+  # config (if any) nor from the cli" and returns 503 for every request. The tunnel looks
+  # healthy from every angle except the one that matters.
+  #
+  # "cloudflare" means the routing is served to the connector by Cloudflare, and the
+  # ingress rules below are what it serves.
+  config_src = "cloudflare"
 
   lifecycle {
     # ADOPTING AN EXISTING TUNNEL DEPENDS ON THIS.
@@ -45,5 +53,31 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
     # simply adopted. It also means the secret is never rewritten in place for a tunnel
     # this module created — rotating one is a deliberate replace, not a plan diff.
     ignore_changes = [secret]
+  }
+}
+
+# ── Routing ───────────────────────────────────────────────────────────────────
+# A tunnel with no ingress rule is inert: it connects, reports healthy, and 503s every
+# request. Creating the tunnel without this is the trap the resource above describes.
+#
+# The catch-all matters as much as the hostname rule. Cloudflare requires the LAST rule
+# to have no hostname, and without it the configuration is rejected.
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "this" {
+  count = var.hostname != "" ? 1 : 0
+
+  account_id = var.account_id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.this.id
+
+  config {
+    ingress_rule {
+      hostname = var.hostname
+      service  = var.service
+    }
+
+    # Anything that reaches the connector without matching the hostname above is not
+    # traffic this tunnel is for.
+    ingress_rule {
+      service = "http_status:404"
+    }
   }
 }
