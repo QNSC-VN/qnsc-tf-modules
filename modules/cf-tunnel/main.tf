@@ -36,7 +36,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
   #
   # Overridable so an EXISTING tunnel can be adopted without its configuration being
   # rewritten by the import. See the variable.
-  config_src = var.config_src
+  config_src = var.config_src != "" ? var.config_src : null
 
   lifecycle {
     # ADOPTING AN EXISTING TUNNEL DEPENDS ON THIS.

@@ -46,15 +46,21 @@ variable "config_src" {
     module manages) or "local" (a config file or --url on the connector itself).
 
     ADOPTING AN EXISTING TUNNEL: set this to whatever the tunnel already has, or the
-    import produces a diff that rewrites how a working connector is configured. A
-    dashboard-created tunnel with a public hostname is normally "cloudflare".
+    import produces a diff that rewrites how a working connector is configured.
+
+    Use "" when the tunnel has NO config_src recorded — which is the case for tunnels
+    created before the provider tracked it. The attribute is then left unset rather than
+    written, because config_src FORCES REPLACEMENT: setting it on an adopted tunnel
+    destroys and recreates it, issuing a new UUID, a new CNAME target and a new connector
+    token. On a hostname already serving traffic that is an outage, and the plan is the
+    only place it is visible before it happens.
 
     "local" is almost always wrong for a sidecar handed only TUNNEL_TOKEN — it has no
     local config, so it connects, reports healthy, and returns 503 to everything.
   EOT
 
   validation {
-    condition     = contains(["cloudflare", "local"], var.config_src)
-    error_message = "config_src must be \"cloudflare\" or \"local\"."
+    condition     = contains(["cloudflare", "local", ""], var.config_src)
+    error_message = "config_src must be \"cloudflare\", \"local\", or \"\" to leave it unset."
   }
 }
