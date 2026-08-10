@@ -13,3 +13,26 @@ variable "name" {
     serve production traffic.
   EOT
 }
+
+variable "hostname" {
+  type        = string
+  default     = ""
+  description = <<-EOT
+    Public hostname this tunnel serves, e.g. "kb-api-dev.qnsc.vn".
+
+    Empty creates NO ingress rule, which leaves the connector answering 503 to everything
+    — cloudflared's own warning is "No ingress rules were defined in provided config (if
+    any) nor from the cli". Only leave it empty for a tunnel whose routing is managed
+    elsewhere.
+  EOT
+}
+
+variable "service" {
+  type        = string
+  default     = "http://localhost:8000"
+  description = <<-EOT
+    Where the connector forwards matching requests. `localhost` is correct for a
+    cloudflared sidecar: under ECS awsvpc every container in a task shares one network
+    namespace, so the application is reachable without exposing a port.
+  EOT
+}
