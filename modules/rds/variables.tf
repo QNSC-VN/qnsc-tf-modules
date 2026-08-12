@@ -98,3 +98,30 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "log_retention_days" {
+  type    = number
+  default = 30
+
+  description = <<-EOT
+    CloudWatch retention for the log groups RDS creates from
+    `enabled_cloudwatch_logs_exports` (postgresql, upgrade).
+
+    WITHOUT THIS THEY NEVER EXPIRE. RDS creates `/aws/rds/instance/<id>/<type>` itself,
+    on first write, with retention unset — and Terraform does not own a resource it did
+    not create, so nothing ever corrected it. Measured across this organisation before
+    the fix: three instances, three different answers, none of them in code.
+
+        /aws/rds/instance/qnsc-kb-develop/postgresql    None   (never expires)
+        /aws/rds/instance/rally-develop/postgresql      7      (set by hand)
+        /aws/rds/instance/rally-prod/postgresql         90     (set by hand)
+
+    Cheap to ignore and easy to miss: a develop database logs little, so the bill stays
+    flat for a year and then is not flat. The point is less the money than that retention
+    on a database's logs should be a decision someone made, in a diff.
+
+    30 rather than the caller's application log retention: these are slow-query and
+    upgrade logs, read when diagnosing something that already happened, so develop wants
+    more than its 7-day application window while production needs no more than its 90.
+  EOT
+}
