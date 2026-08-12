@@ -274,6 +274,46 @@ resource "aws_iam_role_policy_attachment" "infra_plan_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
+# ReadOnlyAccess deliberately EXCLUDES secretsmanager:GetSecretValue, which is normally
+# exactly right for a role any pull request can assume. But a stack that manages an
+# `aws_secretsmanager_secret_version` cannot be PLANNED without it: the provider's Read
+# calls GetSecretValue on every refresh, so the plan fails outright —
+#
+#   Error: reading Secrets Manager Secret Version (arn:...:rally/develop/tunnel-token-tf-*
+#   |terraform-2026...): AccessDeniedException: User: .../rally-github-infra-plan is not
+#   authorized to perform: secretsmanager:GetSecretValue
+#
+# This is latent rather than immediate, which is what makes it nasty. `detect-changes`
+# path-filters the plan matrix, so the environment holding the resource is only planned by
+# a PR that touches it or the shared stack module. rally applied a tunnel token on
+# 2026-08-10 and the first PR to plan that environment was ten days later — at which point
+# every open PR went red at once, for a change none of them had made.
+#
+# SCOPED TO TUNNEL TOKENS, and the narrowness is the whole point. These secrets are
+# Terraform's own: it writes the value, so the value is in state, and the plan role holds
+# `s3:GetObject` through ReadOnlyAccess and can already read the state. The grant therefore
+# discloses nothing a plan could not already obtain.
+#
+# `<product>/*` would NOT be equivalent. The app bundle holds material an operator pasted
+# and Terraform never sees — JWT signing keys, OAuth client secrets, DB passwords. Those
+# are absent from state, so a wildcard would hand every PR author real secrets. If another
+# Terraform-owned secret needs planning later, add its name here rather than widening this.
+resource "aws_iam_role_policy" "infra_plan_tunnel_token_read" {
+  name = "plan-read-tunnel-token"
+  role = aws_iam_role.infra_plan.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = ["secretsmanager:GetSecretValue"]
+      # Trailing `*` twice over: Secrets Manager appends a random 6-character suffix to
+      # every ARN, and the name itself varies by product (`tunnel-token`, `tunnel-token-tf`).
+      Resource = "arn:aws:secretsmanager:*:${local.account_id}:secret:${var.product}/*/tunnel-token*"
+    }]
+  })
+}
+
 # Apply role for main branch (broad; protected by branch rules + the sub condition).
 resource "aws_iam_role" "infra_apply" {
   name        = "${var.product}-github-infra-apply"
