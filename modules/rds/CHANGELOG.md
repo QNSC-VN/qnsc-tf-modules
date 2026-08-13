@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/rds-v2.0.0...rds-v2.1.0) (2026-08-13)
+
+
+### Features
+
+* **rds:** manage retention on the exported log groups ([#70](https://github.com/QNSC-VN/qnsc-tf-modules/issues/70)) ([c35f966](https://github.com/QNSC-VN/qnsc-tf-modules/commit/c35f966596b0608446eb994a1f7869d3eb1df9f2))
+
 ## [2.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/rds-v1.1.0...rds-v2.0.0) (2026-07-28)
 
 
