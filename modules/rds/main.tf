@@ -4,6 +4,12 @@
 # and enhanced monitoring.
 # =============================================================================
 
+locals {
+  # One list, used by both the instance's export setting and the log groups below, so
+  # adding a log type cannot enable the export while leaving its group unmanaged.
+  exported_logs = ["postgresql", "upgrade"]
+}
+
 resource "aws_db_subnet_group" "this" {
   name       = "${var.identifier}-db"
   subnet_ids = var.subnet_ids
@@ -99,7 +105,8 @@ resource "aws_db_instance" "this" {
   monitoring_interval = var.monitoring_interval
   monitoring_role_arn = var.monitoring_interval > 0 ? aws_iam_role.enhanced_monitoring[0].arn : null
 
-  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  # The log groups these land in are managed below — see aws_cloudwatch_log_group.logs.
+  enabled_cloudwatch_logs_exports = local.exported_logs
 
   # Dev (deletion_protection=false) skips the final snapshot for clean teardown.
   # Prod takes a final snapshot by default. skip_final_snapshot can be forced
@@ -110,4 +117,43 @@ resource "aws_db_instance" "this" {
   final_snapshot_identifier = var.deletion_protection ? "${var.identifier}-final" : null
 
   tags = merge(var.tags, { Name = var.identifier })
+}
+
+
+# ── Retention for the exported log groups ────────────────────────────────────
+# RDS creates `/aws/rds/instance/<id>/<type>` ITSELF, on first write, with retention
+# unset — and Terraform does not own what it did not create, so nothing ever corrected
+# it. Measured across this organisation before this resource existed: three instances,
+# three different answers, none of them in code.
+#
+#     /aws/rds/instance/qnsc-kb-develop/postgresql    None   (never expires)
+#     /aws/rds/instance/rally-develop/postgresql      7      (set by hand)
+#     /aws/rds/instance/rally-prod/postgresql         90     (set by hand)
+#
+# Declaring the group here makes RDS write into an existing group rather than create one,
+# so retention is a decision in a diff instead of whatever a console click left behind.
+#
+# ⚠ AN EXISTING INSTANCE NEEDS A ONE-TIME IMPORT. RDS already made these groups, so a
+# first apply against a live instance fails with ResourceAlreadyExistsException. Import
+# each one before applying — the module cannot do this for you, because `import` blocks
+# are only valid in a root module:
+#
+#     tofu import 'module.stack.module.rds.aws_cloudwatch_log_group.logs["postgresql"]' \
+#       /aws/rds/instance/<identifier>/postgresql
+#     tofu import 'module.stack.module.rds.aws_cloudwatch_log_group.logs["upgrade"]' \
+#       /aws/rds/instance/<identifier>/upgrade
+#
+# The `upgrade` group may not exist yet on an instance that has never been upgraded —
+# in that case skip its import and let the apply create it.
+#
+# NOT `depends_on` the instance, deliberately: the group must exist BEFORE RDS first
+# writes, or RDS creates its own and this resource collides with it on the next apply.
+resource "aws_cloudwatch_log_group" "logs" {
+  for_each = toset(local.exported_logs)
+
+  name              = "/aws/rds/instance/${var.identifier}/${each.value}"
+  retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
+
+  tags = merge(var.tags, { Name = "/aws/rds/instance/${var.identifier}/${each.value}" })
 }
