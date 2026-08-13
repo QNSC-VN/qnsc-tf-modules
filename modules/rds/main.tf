@@ -153,7 +153,25 @@ resource "aws_cloudwatch_log_group" "logs" {
 
   name              = "/aws/rds/instance/${var.identifier}/${each.value}"
   retention_in_days = var.log_retention_days
-  kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
+
+  # NO kms_key_id, and that is deliberate rather than an omission.
+  #
+  # Setting it to the product CMK looked obviously right — the instance and its
+  # snapshots use that key — and it broke the first apply:
+  #
+  #   Error: associating CloudWatch Logs Log Group (/aws/rds/instance/<id>/postgresql)
+  #   KMS key: AccessDeniedException: The specified KMS key does not exist or is not
+  #   allowed to be used with Arn 'arn:aws:logs:...:log-group:/aws/rds/instance/...'
+  #
+  # CloudWatch Logs encrypts a group by assuming the caller's grant on the key, so the
+  # KEY POLICY must allow logs.<region>.amazonaws.com with an
+  # kms:EncryptionContext:aws:logs:arn condition. The product CMK is written for RDS,
+  # ECR and Secrets Manager and grants Logs nothing, so the association is refused —
+  # after the group already exists, leaving the apply half-done.
+  #
+  # No log group in this organisation uses a CMK today, so adding one here would have
+  # made this module the odd one out AND required a key-policy change nobody asked for.
+  # CloudWatch Logs is encrypted at rest with an AWS-managed key regardless.
 
   tags = merge(var.tags, { Name = "/aws/rds/instance/${var.identifier}/${each.value}" })
 }
