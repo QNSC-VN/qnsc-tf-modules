@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/rds-v2.1.0...rds-v2.1.1) (2026-08-13)
+
+
+### Bug Fixes
+
+* **rds:** do not put the product CMK on the exported log groups ([#72](https://github.com/QNSC-VN/qnsc-tf-modules/issues/72)) ([e00a043](https://github.com/QNSC-VN/qnsc-tf-modules/commit/e00a043aa8c13d7b39098fd5769abb1ae110c8bc))
+
 ## [2.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/rds-v2.0.0...rds-v2.1.0) (2026-08-13)
 
 
