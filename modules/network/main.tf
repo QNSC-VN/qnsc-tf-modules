@@ -112,7 +112,83 @@ resource "aws_instance" "nat" {
   subnet_id              = aws_subnet.public[var.azs[0]].id
   source_dest_check      = false
   vpc_security_group_ids = [aws_security_group.nat_instance[0].id]
+  iam_instance_profile   = var.nat_ssm_bastion ? aws_iam_instance_profile.nat_ssm[0].name : null
   tags                   = merge(var.tags, { Name = "${var.name}-nat-instance" })
+}
+
+# ── SSM bastion on the NAT instance (opt-in) ─────────────────────────────────
+# Turns the NAT box into a jump host for `aws ssm start-session
+# --document-name AWS-StartPortForwardingSessionToRemoteHost`, so a developer can reach
+# RDS and the cache from a laptop WITHOUT the databases being publicly accessible, an
+# SSH key, an inbound port, or a second instance to pay for.
+#
+# The NAT already exists, already runs, and already has the egress the SSM agent needs.
+# The alternatives all cost something: a dedicated bastion is another instance, an
+# always-on cloudflared is another task, and a publicly-accessible RDS costs nothing
+# until the day it costs everything.
+#
+# DELIBERATELY OPT-IN, default off. This grants a path from a laptop to the data tier,
+# which is right for develop and a decision for production. Turning it on is a choice
+# somebody makes per environment, in a diff.
+#
+# Access is controlled by IAM (who may call ssm:StartSession), not by the network, and
+# every session is recorded in CloudTrail. That is the property SSH bastions lack.
+resource "aws_iam_role" "nat_ssm" {
+  count = var.nat_type == "instance" && var.nat_ssm_bastion ? 1 : 0
+
+  name = "${var.name}-nat-ssm"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  tags = var.tags
+}
+
+# The AWS-managed policy, not a hand-written one: it is exactly the set the SSM agent
+# needs to register and hold a session, and it tracks changes to that contract.
+resource "aws_iam_role_policy_attachment" "nat_ssm" {
+  count = var.nat_type == "instance" && var.nat_ssm_bastion ? 1 : 0
+
+  role       = aws_iam_role.nat_ssm[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "nat_ssm" {
+  count = var.nat_type == "instance" && var.nat_ssm_bastion ? 1 : 0
+
+  name = "${var.name}-nat-ssm"
+  role = aws_iam_role.nat_ssm[0].name
+  tags = var.tags
+}
+
+# The port-forward terminates ON the NAT box and dials the data tier from there, so the
+# data security groups must accept it. Scoped to the NAT's own security group — not a
+# CIDR — so nothing else in the public subnet inherits database access.
+resource "aws_vpc_security_group_ingress_rule" "rds_from_nat" {
+  count = var.nat_type == "instance" && var.nat_ssm_bastion ? 1 : 0
+
+  security_group_id            = aws_security_group.rds.id
+  referenced_security_group_id = aws_security_group.nat_instance[0].id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+  description                  = "SSM port-forward jump host (nat_ssm_bastion)"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "cache_from_nat" {
+  count = var.nat_type == "instance" && var.nat_ssm_bastion ? 1 : 0
+
+  security_group_id            = aws_security_group.cache.id
+  referenced_security_group_id = aws_security_group.nat_instance[0].id
+  from_port                    = 6379
+  to_port                      = 6379
+  ip_protocol                  = "tcp"
+  description                  = "SSM port-forward jump host (nat_ssm_bastion)"
 }
 
 # ── Route tables ──────────────────────────────────────────────────────────────

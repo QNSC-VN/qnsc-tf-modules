@@ -93,3 +93,32 @@ variable "tags" {
   default     = {}
   description = "Tags applied to all resources."
 }
+
+variable "nat_ssm_bastion" {
+  type    = bool
+  default = false
+
+  description = <<-EOT
+    Attach an SSM instance profile to the NAT instance and allow it to reach RDS and the
+    cache, so a developer can port-forward to them from a laptop:
+
+        aws ssm start-session --target <nat-instance-id> \
+          --document-name AWS-StartPortForwardingSessionToRemoteHost \
+          --parameters '{"host":["<rds-endpoint>"],"portNumber":["5432"],"localPortNumber":["15432"]}'
+
+    Then point DBeaver at localhost:15432. The databases stay `publicly_accessible =
+    false`; there is no inbound port, no SSH key and no second instance to pay for,
+    because the NAT already runs and already has the egress the SSM agent needs.
+
+    OFF BY DEFAULT because it creates a path from a laptop to the data tier. That is
+    reasonable for develop and a deliberate decision for production — so it is a choice
+    someone makes per environment, in a diff, rather than a default nobody chose.
+
+    Access is governed by IAM (who may call ssm:StartSession) rather than by the network,
+    and every session appears in CloudTrail. That auditability is what an SSH bastion
+    does not give you.
+
+    NOTE for the cache: transit encryption is on, so the local end speaks TLS —
+    `redis-cli --tls -h 127.0.0.1 -p 16379`. A plain connection is refused.
+  EOT
+}
