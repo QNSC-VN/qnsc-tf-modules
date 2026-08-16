@@ -48,8 +48,7 @@
       "component": "messaging"
     },
     "modules/network": {
-      "component": "network",
-      "release-as": "1.3.0"
+      "component": "network"
     },
     "modules/observability": {
       "component": "observability"
