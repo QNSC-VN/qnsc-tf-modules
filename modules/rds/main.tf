@@ -149,6 +149,8 @@ resource "aws_db_instance" "this" {
 # NOT `depends_on` the instance, deliberately: the group must exist BEFORE RDS first
 # writes, or RDS creates its own and this resource collides with it on the next apply.
 resource "aws_cloudwatch_log_group" "logs" {
+  #checkov:skip=CKV_AWS_158:CloudWatch Logs encrypts a group by assuming the CALLER's grant on the key, so the key policy must allow logs.<region>.amazonaws.com with a kms:EncryptionContext:aws:logs:arn condition. The product CMK is written for RDS, ECR and Secrets Manager and grants Logs nothing — v2.1.0 set kms_key_id here and every apply failed with "AccessDeniedException: The specified KMS key does not exist or is not allowed to be used", AFTER creating the group, leaving the apply half-done. No log group in this account uses a CMK; the ecs-service groups are suppressed for the same check. Encrypting these needs a deliberate key-policy change across the organisation, not a flag on one module.
+  #checkov:skip=CKV_AWS_338:The check wants a year, for compliance retention. These are slow-query and upgrade logs, read when diagnosing something that already happened — 30 days covers that, and a year of a develop database's logs is storage nobody reads. The retention is now a decision in code (var.log_retention_days) rather than the "never expires" RDS leaves behind, which is what this resource exists to fix; a caller with a real retention obligation raises it.
   for_each = toset(local.exported_logs)
 
   name              = "/aws/rds/instance/${var.identifier}/${each.value}"
