@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/network-v1.3.0...network-v1.3.1) (2026-08-16)
+
+
+### Bug Fixes
+
+* **network:** restore nat_type = "none", lost from main ([#80](https://github.com/QNSC-VN/qnsc-tf-modules/issues/80)) ([5b3bedb](https://github.com/QNSC-VN/qnsc-tf-modules/commit/5b3bedb5f36d951ea7d942b9c854ec099cde9b5a))
+
 ## [1.3.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/network-v1.2.0...network-v1.3.0) (2026-08-16)
 
 
