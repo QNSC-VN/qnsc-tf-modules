@@ -37,3 +37,14 @@ output "sg_cache_id" {
   value       = aws_security_group.cache.id
   description = "Cache (Valkey/Redis/ElastiCache) security group ID."
 }
+
+output "nat_instance_id" {
+  description = <<-EOT
+    Instance id of the NAT box, or null when nat_type is not "instance".
+
+    Exposed so the SSM port-forward command can be scripted or printed by the caller —
+    it is the `--target` argument, and hunting for it in the console is the small friction
+    that stops people using the safe path.
+  EOT
+  value       = var.nat_type == "instance" ? aws_instance.nat[0].id : null
+}
