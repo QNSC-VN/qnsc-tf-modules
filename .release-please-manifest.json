@@ -10,7 +10,7 @@
   "modules/ecs-service": "2.1.1",
   "modules/iam-oidc": "3.0.1",
   "modules/messaging": "1.0.0",
-  "modules/network": "1.2.0",
+  "modules/network": "1.3.0",
   "modules/observability": "4.1.0",
   "modules/observability-agent": "1.0.0",
   "modules/oneshot-task": "2.0.0",
