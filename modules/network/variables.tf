@@ -54,8 +54,8 @@ variable "nat_type" {
       "instance" — fck-nat t4g.nano EC2 (~$3/mo). Use for dev (single AZ, saves ~$30/mo).
   EOT
   validation {
-    condition     = contains(["gateway", "instance"], var.nat_type)
-    error_message = "nat_type must be 'gateway' or 'instance'."
+    condition     = contains(["gateway", "instance", "none"], var.nat_type)
+    error_message = "nat_type must be 'gateway', 'instance' or 'none'."
   }
 }
 
@@ -121,4 +121,14 @@ variable "nat_ssm_bastion" {
     NOTE for the cache: transit encryption is on, so the local end speaks TLS —
     `redis-cli --tls -h 127.0.0.1 -p 16379`. A plain connection is refused.
   EOT
+
+  # There is no NAT instance to attach anything to unless nat_type is "instance", so this
+  # would otherwise apply cleanly and produce nothing — the reader would set the flag,
+  # get a green apply, and find no way in. Refusing the pair says which of the two to
+  # change. Most likely nat_type: "none" is for an environment with no tasks running,
+  # which is not one anybody needs a database tunnel into.
+  validation {
+    condition     = !var.nat_ssm_bastion || var.nat_type == "instance"
+    error_message = "nat_ssm_bastion requires nat_type = \"instance\" — there is no NAT instance to attach the profile to otherwise, and the flag would apply cleanly while doing nothing."
+  }
 }
