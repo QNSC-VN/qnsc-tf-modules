@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/QNSC-VN/qnsc-tf-modules/compare/rds-v2.1.1...rds-v2.1.2) (2026-08-16)
+
+
+### Bug Fixes
+
+* **rds:** suppress the two log-group checkov findings, with reasons ([#75](https://github.com/QNSC-VN/qnsc-tf-modules/issues/75)) ([12bb16d](https://github.com/QNSC-VN/qnsc-tf-modules/commit/12bb16dac39810e59b5b0f64371334615c03fa3b))
+
 ## [2.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/rds-v2.1.0...rds-v2.1.1) (2026-08-13)
 
 
