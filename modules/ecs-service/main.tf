@@ -158,6 +158,37 @@ resource "aws_iam_role_policy" "task_secrets" {
 }
 
 # ── Task definition ───────────────────────────────────────────────────────────
+# ── The baseline task definition ─────────────────────────────────────────────
+# EXPECT THIS TO SHOW "must be replaced" ON EVERY PLAN OF A DEPLOYED ENVIRONMENT. It is
+# not drift and it is not a bug, and it is written here because the plan output looks
+# alarming and somebody will eventually stop a release over it.
+#
+# Two things register revisions of this family:
+#   Terraform  owns the BASELINE — image, environment, secrets, sizing, architecture.
+#   The deploy  (qnsc-ci backend-deploy) registers a new revision per release and points
+#              the service at it with `ecs update-service`.
+#
+# So the sequence is: Terraform writes revision N, a deploy writes N+1, and Terraform's
+# next plan sees its own resource no longer matching the live family and wants N+2. That
+# is why a healthy production stack plans as `3 to add, 0 to change, 3 to destroy` — one
+# add and one destroy per service, api plus worker plus migrator — while nothing is wrong.
+#
+# Measured on rally production 2026-08-18, hours after a successful go-live with the api
+# serving 200s: exactly that plan, and an identical plan from a clean checkout of main,
+# which is how it was confirmed to be pre-existing rather than caused by the change under
+# review.
+#
+# IT IS HARMLESS BECAUSE OF `ignore_changes = [task_definition]` on the service below: a
+# `tofu apply` registers its new revision and the SERVICE keeps running the one the deploy
+# chose. Applying does not roll production back.
+#
+# WHAT WOULD BE WRONG, and what to actually look for in that plan: a task definition being
+# replaced is routine, but the ECS SERVICE, the cluster, the RDS instance, the cache or any
+# secret appearing in a destroy is not. Read the resource names, not the counts.
+#
+# The alternative — `ignore_changes` on the task definition's own attributes — was not
+# taken: it would silence real drift in image, secrets and sizing, which is the part
+# Terraform exists to own here.
 resource "aws_ecs_task_definition" "this" {
   family                   = local.full_name
   requires_compatibilities = ["FARGATE"]
