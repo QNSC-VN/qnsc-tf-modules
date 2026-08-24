@@ -38,6 +38,8 @@ jobs:
       contents: read
       security-events: write
     uses: QNSC-VN/qnsc-ci/.github/workflows/actions-security.yml@v1
+    with:
+      blocking: true
 
   checkov:
     name: checkov (IaC misconfig)
@@ -48,6 +50,8 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Checkov scan
         uses: bridgecrewio/checkov-action@1246d92f57abae29d5db5f9aeeed2a9813e52d7d # v12.3117.0
@@ -78,5 +82,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: QNSC-VN/qnsc-ci/actions/scan-secrets@v1.9.2
