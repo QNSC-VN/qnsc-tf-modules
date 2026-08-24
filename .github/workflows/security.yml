@@ -34,6 +34,9 @@ jobs:
   # (Dependabot/Renovate), leaving the required check stuck "Expected" forever.
   # Root cause: qnsc-tf-modules#83.
   actions-security:
+    permissions:
+      contents: read
+      security-events: write
     uses: QNSC-VN/qnsc-ci/.github/workflows/actions-security.yml@v1
 
   checkov:
