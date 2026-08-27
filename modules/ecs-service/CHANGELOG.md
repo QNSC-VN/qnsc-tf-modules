@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.2.0...ecs-service-v2.3.0) (2026-08-27)
+
+
+### Features
+
+* **ecs-service:** add use_firelens to switch the primary container's log driver ([#88](https://github.com/QNSC-VN/qnsc-tf-modules/issues/88)) ([87ffc4a](https://github.com/QNSC-VN/qnsc-tf-modules/commit/87ffc4a563e8ea1c46f86aaeb831eaa8315affcc))
+
 ## [2.2.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.1.1...ecs-service-v2.2.0) (2026-08-27)
 
 
