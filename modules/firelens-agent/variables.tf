@@ -59,15 +59,20 @@ variable "image" {
     `init` variant runs a startup step that fetches S3-listed config files
     itself and `@INCLUDE`s them — see the module README.
 
-    The one deliberately unpinned image reference in this org's modules:
-    `init` tags don't track the same version numbers as `:stable`
-    (`init-2.27.0` is a Fluent Bit version, not an aws-for-fluent-bit
-    release), and AWS's own examples use `:init-latest` as the standard
-    reference — pin to a specific `init-X.Y.Z` once one has been verified
-    working, rather than guessing a version that may not exist.
+    PINNED, deliberately, to a specific version — not `:init-latest`.
+    `:init-latest` was tried first and resolved to Fluent Bit v1.9.10, whose
+    `opentelemetry` output plugin has no `host`/`port`/`logs_uri`/`tls` at
+    all ("unknown configuration property 'Logs_Uri'"), a pre-OTLP-maturity
+    build despite the tag's name — found on a live develop task failure,
+    not in testing. `init-3.4.14` is Fluent Bit v5.0.9 and was confirmed
+    working by actually running the image against this module's rendered
+    config (`docker run --entrypoint fluent-bit ... -o opentelemetry -h`,
+    then a real startup test), not by reading documentation. Full list of
+    available versions: `aws ssm get-parameters-by-path --path
+    /aws/service/aws-for-fluent-bit/`.
   EOT
   type        = string
-  default     = "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-latest"
+  default     = "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-3.4.14"
 }
 
 variable "cpu" {
