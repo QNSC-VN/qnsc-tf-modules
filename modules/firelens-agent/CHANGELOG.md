@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.0...firelens-agent-v0.1.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **firelens-agent:** Fargate does not support config-file-type s3 ([#90](https://github.com/QNSC-VN/qnsc-tf-modules/issues/90)) ([0532c68](https://github.com/QNSC-VN/qnsc-tf-modules/commit/0532c682f7dfc24ac2d73bf871e12ee5fc08be07))
+
 ## 0.1.0 (2026-08-27)
 
 
