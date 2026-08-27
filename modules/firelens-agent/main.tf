@@ -25,16 +25,18 @@
 #
 # Why AWS's official image, not the community Grafana Loki Fluent Bit plugin:
 # that plugin is no longer actively maintained (Grafana's own docs say so).
-# `aws-for-fluent-bit` v3.0.0+ (Oct 2025) ships a native OpenTelemetry output
-# plugin, so the router speaks the SAME protocol as observability-agent's
-# otlphttp exporter — one exporter protocol across all three signals, no
-# custom image build, no unmaintained dependency.
+# `aws-for-fluent-bit` ships a native OpenTelemetry output plugin (verified
+# present and working at init-3.4.14, Fluent Bit v5.0.9 — see variables.tf
+# for why the version must be pinned, not "latest"), so the router speaks
+# the SAME protocol as observability-agent's otlphttp exporter — one
+# exporter protocol across all three signals, no custom image build, no
+# unmaintained dependency.
 # =============================================================================
 
 locals {
   enabled = var.otlp_endpoint != "" && var.token_secret_arn != ""
 
-  # Fluent Bit's opentelemetry output takes Host/Port/URI separately, not one
+  # Fluent Bit's opentelemetry output takes host/port/uri separately, not one
   # endpoint URL — split what observability-agent's otlphttp exporter takes
   # as a single string. "/otlp" + "/v1/logs" is the same base-path convention
   # Grafana Cloud's gateway uses for traces ("/otlp" + "/v1/traces").
@@ -50,6 +52,15 @@ locals {
   # that downloads each `aws_fluent_bit_init_s3_<N>` env var's S3 object and
   # `@INCLUDE`s it into the config ECS auto-generates — so [SERVICE] and
   # [INPUT] stay auto-managed, and only the OUTPUT stanzas below are ours.
+  #
+  # Field names are lowercase and verified by actually running this image
+  # (`docker run --entrypoint fluent-bit ... -o opentelemetry -h`), not
+  # assumed from docs: `init-latest` resolved to Fluent Bit v1.9.10, whose
+  # opentelemetry output has NO host/port/logs_uri/tls at all ("unknown
+  # configuration property 'Logs_Uri'") — an ancient, pre-OTLP-maturity
+  # build, despite the tag's name. `init-3.4.14` (pinned in variables.tf) is
+  # v5.0.9 and has the fields this config uses; confirmed by actually
+  # starting the container against this exact config, not just parsing it.
   fluent_bit_config = <<-EOT
     [OUTPUT]
         Name              cloudwatch_logs
@@ -62,13 +73,13 @@ locals {
     [OUTPUT]
         Name          opentelemetry
         Match         *
-        Host          ${local.otlp_host}
-        Port          443
-        Logs_Uri      ${local.logs_uri}
-        Tls           On
-        Tls.verify    On
-        Header        Authorization $${OBSERVABILITY_TOKEN}
-        Logs_Body_Key $$message
+        host          ${local.otlp_host}
+        port          443
+        logs_uri      ${local.logs_uri}
+        tls           On
+        tls.verify    On
+        header        Authorization $${OBSERVABILITY_TOKEN}
+        logs_body_key $$message
   EOT
 }
 
