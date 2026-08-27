@@ -75,6 +75,12 @@
                     ]
                 },
                 {
+                    "resource": "aws_ecs_task_definition.this",
+                    "check_ids": [
+                        "CKV_AWS_336"
+                    ]
+                },
+                {
                     "resource": "aws_lb_target_group.this[0]",
                     "check_ids": [
                         "CKV_AWS_378"
