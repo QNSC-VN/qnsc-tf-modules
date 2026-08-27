@@ -239,7 +239,19 @@ resource "aws_ecs_task_definition" "this" {
       secrets = [
         for s in var.secrets : { name = s.name, valueFrom = s.secret_arn }
       ]
-      logConfiguration = {
+      # `awsfirelens` when a firelens-agent router sits in `additional_containers`:
+      # ECS allows exactly one log driver per container, so routing to a second
+      # destination (Grafana, via that router's own dual-write config) means
+      # THIS container stops talking to awslogs directly — see firelens-agent's
+      # README for why that is not a loss (the router's config still writes
+      # CloudWatch itself). `aws_cloudwatch_log_group.this` is still created
+      # either way: FireLens' `cloudwatch_logs` output plugin needs somewhere
+      # to write, and it is the same group this container used to log to
+      # directly, so existing queries and retention are unaffected.
+      logConfiguration = var.use_firelens ? {
+        logDriver = "awsfirelens"
+        options   = {}
+        } : {
         logDriver = "awslogs"
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.this.name

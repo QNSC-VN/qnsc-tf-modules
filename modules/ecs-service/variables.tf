@@ -161,6 +161,17 @@ variable "log_retention_days" {
   type    = number
   default = 30
 }
+variable "use_firelens" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Switch this container's log driver from `awslogs` to `awsfirelens`. Set
+    true only when a `firelens-agent` router is ALSO present in
+    `additional_containers` — otherwise the container has no log destination
+    at all, since ECS routes `awsfirelens` output to whichever sidecar
+    declares `firelensConfiguration`, not to CloudWatch directly.
+  EOT
+}
 variable "enable_ecs_exec" {
   type        = bool
   default     = false
