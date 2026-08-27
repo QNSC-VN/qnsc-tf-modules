@@ -53,6 +53,9 @@
     "modules/observability": {
       "component": "observability"
     },
+    "modules/firelens-agent": {
+      "component": "firelens-agent"
+    },
     "modules/observability-agent": {
       "component": "observability-agent"
     },

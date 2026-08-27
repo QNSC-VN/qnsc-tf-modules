@@ -37,7 +37,7 @@
             "file": "/app-bucket/main.tf",
             "findings": [
                 {
-                    "resource": "aws_s3_bucket.this",
+                    "resource": "module.config_bucket.aws_s3_bucket.this",
                     "check_ids": [
                         "CKV2_AWS_62",
                         "CKV_AWS_144",
@@ -45,7 +45,7 @@
                     ]
                 },
                 {
-                    "resource": "aws_s3_bucket_lifecycle_configuration.this[0]",
+                    "resource": "module.config_bucket.aws_s3_bucket_lifecycle_configuration.this[0]",
                     "check_ids": [
                         "CKV_AWS_300"
                     ]
@@ -119,12 +119,6 @@
                     "check_ids": [
                         "CKV_AWS_158",
                         "CKV_AWS_338"
-                    ]
-                },
-                {
-                    "resource": "aws_instance.nat",
-                    "check_ids": [
-                        "CKV2_AWS_41"
                     ]
                 },
                 {
