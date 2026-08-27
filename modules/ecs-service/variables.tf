@@ -134,6 +134,16 @@ variable "s3_bucket_arns" {
   default     = []
   description = "S3 bucket ARNs the task may read/write (get/put/delete + list)."
 }
+variable "execution_s3_bucket_arns" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    S3 bucket ARNs the EXECUTION role may GetObject from (read-only) — for
+    FireLens' external custom-config path (`config-file-type = "s3"`), fetched by
+    the agent before the task's containers start. Not the task role: the running
+    app has no reason to read a log-router config bucket.
+  EOT
+}
 variable "task_secret_arns" {
   type        = list(string)
   default     = []

@@ -68,6 +68,27 @@ resource "aws_iam_role_policy" "execution_secrets" {
   policy = data.aws_iam_policy_document.execution_secrets[0].json
 }
 
+# FireLens' external custom-config path (`config-file-type = "s3"`) is read by
+# the AGENT before the task's own containers start, which is why this is on the
+# EXECUTION role, not the task role below. `s3_bucket_arns` (task role) cannot
+# be reused here: granting the task's own runtime code read access to a config
+# bucket it has no reason to touch would be a second, wider grant for the same
+# object.
+data "aws_iam_policy_document" "execution_s3" {
+  count = length(var.execution_s3_bucket_arns) > 0 ? 1 : 0
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = [for arn in var.execution_s3_bucket_arns : "${arn}/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "execution_s3" {
+  count  = length(var.execution_s3_bucket_arns) > 0 ? 1 : 0
+  name   = "execution-s3-access"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.execution_s3[0].json
+}
+
 # ── IAM: task role (runtime AWS access) ───────────────────────────────────────
 resource "aws_iam_role" "task" {
   name               = "${local.full_name}-task"
