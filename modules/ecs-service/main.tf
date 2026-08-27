@@ -130,7 +130,12 @@ data "aws_iam_policy_document" "task_s3" {
     resources = [for arn in var.s3_bucket_arns : "${arn}/*"]
   }
   statement {
-    actions   = ["s3:ListBucket"]
+    # GetBucketLocation is required by any S3 SDK client that resolves the
+    # bucket's region before its first request — confirmed live, not a
+    # guess: aws-for-fluent-bit's init process (firelens-agent) failed with
+    # exactly this action denied, fatal, and took its whole task down with
+    # it (essential=true). ListBucket alone is not a substitute.
+    actions   = ["s3:ListBucket", "s3:GetBucketLocation"]
     resources = var.s3_bucket_arns
   }
 }
