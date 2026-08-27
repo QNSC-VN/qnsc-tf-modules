@@ -24,24 +24,13 @@ variable "token_secret_arn" {
   default     = ""
 }
 
-variable "cloudwatch_log_group" {
-  description = <<-EOT
-    Destination CloudWatch Logs group for the DUAL-WRITE `cloudwatch_logs`
-    output — normally the same log group the app container wrote to directly
-    before adopting this module, so existing Insights queries and retention
-    keep working unchanged. Compliance retention lives here; Grafana becomes
-    the primary place engineers look.
-  EOT
-  type        = string
-}
-
 variable "router_log_group" {
-  description = "CloudWatch log group for the ROUTER's OWN stdout (diagnostics — is it running, is it erroring). Required, same reasoning as observability-agent: a silent router is indistinguishable from a working one."
+  description = "CloudWatch log group for the ROUTER's OWN stdout (diagnostics — is it running, is it erroring). Required, same reasoning as observability-agent: a silent router is indistinguishable from a working one. This is the ONLY place logs go through CloudWatch — app log content is Grafana-only, see main.tf's header comment for why."
   type        = string
 }
 
 variable "region" {
-  description = "Region for both the router's own awslogs driver and the cloudwatch_logs output."
+  description = "Region for the router's own awslogs driver."
   type        = string
 }
 

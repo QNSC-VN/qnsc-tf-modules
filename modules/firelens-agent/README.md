@@ -8,22 +8,24 @@ metrics/traces via direct OTLP push from the app SDK; this one exists only
 because a sidecar cannot read another container's stdout on ECS. That needs a
 FireLens log router, which is what this is.
 
+App log content goes to Grafana only — CloudWatch was tried, worked, and was
+removed on purpose. See "Grafana only" below.
+
 ## Usage
 
 ```hcl
 module "firelens_agent" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/firelens-agent?ref=firelens-agent-v0.2.0"
+  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/firelens-agent?ref=firelens-agent-v0.3.0"
 
-  otlp_endpoint        = var.otlp_endpoint                              # "" ⇒ no-op, same gate as observability-agent
-  token_secret_arn     = module.secrets.secret_arns["observability-token"]
-  cloudwatch_log_group = module.api.log_group_name                      # SAME group the app wrote to before adopting this
-  router_log_group     = module.api.log_group_name                      # router's own diagnostics; reuse is fine
-  region               = var.region
-  kms_key_arn          = module.kms.key_arn
+  otlp_endpoint    = var.otlp_endpoint                              # "" ⇒ no-op, same gate as observability-agent
+  token_secret_arn = module.secrets.secret_arns["observability-token"]
+  router_log_group = module.api.log_group_name                      # router's OWN diagnostics only — see below
+  region           = var.region
+  kms_key_arn      = module.kms.key_arn
 }
 
 module "api" {
-  source = "…//modules/ecs-service?ref=ecs-service-v2.3.0"
+  source = "…//modules/ecs-service?ref=ecs-service-v2.3.1"
 
   additional_containers = concat(
     module.otel_agent.container_definitions,
@@ -38,20 +40,29 @@ module "api" {
   s3_bucket_arns = module.firelens_agent.task_s3_bucket_arns
 
   # The app/worker containers' OWN logConfiguration switches from `awslogs`
-  # to `awsfirelens` — ECS only allows one logDriver per container, so this
-  # (not keeping both) is how the fan-out to CloudWatch AND Grafana happens.
-  # See "Dual-write, not a swap" below.
+  # to `awsfirelens` — ECS only allows one logDriver per container.
 }
 ```
 
-## Dual-write, not a swap
+## Grafana only — CloudWatch was tried and dropped
 
-The generated Fluent Bit config has TWO `[OUTPUT]` blocks matching every log
-line: `cloudwatch_logs` (same log group as before — compliance retention,
-existing Insights queries, unchanged) and `opentelemetry` (Grafana Cloud, same
-backend `observability-agent` already sends metrics/traces to, same
-`Authorization` header secret). Nothing is removed by adopting this module;
-CloudWatch keeps receiving exactly what it always did.
+The generated Fluent Bit config has ONE `[OUTPUT]` block: `opentelemetry`
+(Grafana Cloud, same backend `observability-agent` already sends
+metrics/traces to, same `Authorization` header secret). App log **content**
+no longer reaches CloudWatch at all once this module is adopted —
+`router_log_group` is only the router's own diagnostic stdout.
+
+A `cloudwatch_logs` dual-write was built and verified working, then
+deliberately removed: FireLens' `cloudwatch_logs` output makes its own
+CloudWatch Logs API calls from inside the router container (unlike
+`awslogs`, whose writes are the ECS agent's own, via the execution role —
+no app-level IAM needed there), so it needed a task-role grant
+(`logs:CreateLogStream`/`PutLogEvents`) that a plain `awslogs` setup never
+did. With no confirmed data-residency/compliance need for a second,
+AWS-native copy once Grafana already has the same data, keeping that grant
+active for a destination nobody reads wasn't worth it. If that changes,
+re-add the `[OUTPUT]` block and the task-role grant together — see git
+history on this file for the exact shape.
 
 **The app container's `logConfiguration` must change**, though — from
 `awslogs` directly, to:
@@ -63,8 +74,7 @@ logConfiguration = {
 }
 ```
 
-ECS allows exactly one log driver per container. Routing to two destinations
-happens inside Fluent Bit's config, not by attaching two drivers.
+ECS allows exactly one log driver per container.
 
 ## Why AWS's official image, not the Grafana community Loki plugin
 
