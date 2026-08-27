@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.2...firelens-agent-v0.1.3) (2026-08-27)
+
+
+### Bug Fixes
+
+* **firelens-agent:** fix \$message Terraform escaping bug (real crash) ([#96](https://github.com/QNSC-VN/qnsc-tf-modules/issues/96)) ([9b00109](https://github.com/QNSC-VN/qnsc-tf-modules/commit/9b001092cc3d126e938374f0b93e5b723c83f3ae))
+
 ## [0.1.2](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.1...firelens-agent-v0.1.2) (2026-08-27)
 
 
