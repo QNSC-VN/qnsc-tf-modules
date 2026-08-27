@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.3.0...ecs-service-v2.3.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **ecs-service:** grant task role s3:GetBucketLocation ([#92](https://github.com/QNSC-VN/qnsc-tf-modules/issues/92)) ([285bb29](https://github.com/QNSC-VN/qnsc-tf-modules/commit/285bb2986e48f06416f47f54173eb5d430792c39))
+
 ## [2.3.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.2.0...ecs-service-v2.3.0) (2026-08-27)
 
 
