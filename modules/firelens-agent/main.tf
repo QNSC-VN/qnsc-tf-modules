@@ -79,7 +79,7 @@ locals {
         tls           On
         tls.verify    On
         header        Authorization $${OBSERVABILITY_TOKEN}
-        logs_body_key $$message
+        logs_body_key $message
   EOT
 }
 
