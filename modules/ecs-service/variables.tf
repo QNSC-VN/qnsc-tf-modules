@@ -132,7 +132,7 @@ variable "sns_topic_arns" {
 variable "s3_bucket_arns" {
   type        = list(string)
   default     = []
-  description = "S3 bucket ARNs the task may read/write (get/put/delete + list)."
+  description = "S3 bucket ARNs the task may read/write (get/put/delete + list + get-bucket-location)."
 }
 variable "execution_s3_bucket_arns" {
   type        = list(string)
