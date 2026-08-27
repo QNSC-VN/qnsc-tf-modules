@@ -51,9 +51,23 @@ variable "kms_key_arn" {
 }
 
 variable "image" {
-  description = "Fluent Bit image. Defaults to AWS's official, maintained distribution — v3.0.0+ ships a native OpenTelemetry output plugin, so no community/unmaintained Loki plugin and no custom image build are needed."
+  description = <<-EOT
+    Fluent Bit image. Defaults to AWS's official, maintained distribution's
+    `init` tag — required on Fargate (not just preferred): the plain
+    `:stable` tag has no way to pull a custom config, since Fargate rejects
+    FireLens' `config-file-type = "s3"` outright (EC2-launch-type only). The
+    `init` variant runs a startup step that fetches S3-listed config files
+    itself and `@INCLUDE`s them — see the module README.
+
+    The one deliberately unpinned image reference in this org's modules:
+    `init` tags don't track the same version numbers as `:stable`
+    (`init-2.27.0` is a Fluent Bit version, not an aws-for-fluent-bit
+    release), and AWS's own examples use `:init-latest` as the standard
+    reference — pin to a specific `init-X.Y.Z` once one has been verified
+    working, rather than guessing a version that may not exist.
+  EOT
   type        = string
-  default     = "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable"
+  default     = "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-latest"
 }
 
 variable "cpu" {

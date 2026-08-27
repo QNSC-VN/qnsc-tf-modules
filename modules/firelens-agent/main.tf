@@ -6,10 +6,10 @@
 #
 #   module "firelens_agent" { source = ".../firelens-agent"  … }
 #   module "api" {
-#     source                   = ".../ecs-service"
-#     additional_containers    = concat(module.otel_agent.container_definitions, module.firelens_agent.container_definitions)
-#     secret_arns              = concat(local.secret_arns, module.firelens_agent.secret_arns)
-#     execution_s3_bucket_arns = module.firelens_agent.execution_s3_bucket_arns
+#     source                = ".../ecs-service"
+#     additional_containers = concat(module.otel_agent.container_definitions, module.firelens_agent.container_definitions)
+#     secret_arns            = concat(local.secret_arns, module.firelens_agent.secret_arns)
+#     s3_bucket_arns          = module.firelens_agent.task_s3_bucket_arns
 #     …
 #   }
 #   # And the app/worker containers' own logConfiguration switches from
@@ -42,21 +42,15 @@ locals {
   otlp_path = local.enabled ? try(regex("^https?://[^/]+(/.*)$", var.otlp_endpoint)[0], "") : ""
   logs_uri  = "${local.otlp_path}/v1/logs"
 
-  # ECS auto-generates [SERVICE]/[INPUT] ONLY when no custom config is
-  # supplied. An external config file (config-file-type = "s3") REPLACES the
-  # whole configuration, so both are written out explicitly here — the
-  # `forward` input on the unix socket is the same one ECS's own generated
-  # config always uses to receive from every container on this task whose
-  # logDriver is `awsfirelens`.
+  # OUTPUT blocks only. Fargate does not support FireLens' `config-file-type
+  # = "s3"` at all (EC2-launch-type only — confirmed the hard way: ECS
+  # rejects task registration with "Fargate launch type does not support
+  # FirelensConfiguration config file from 's3'"). The fix is AWS's own
+  # "init process" instead: the `:init-*` image tag runs a pre-launch step
+  # that downloads each `aws_fluent_bit_init_s3_<N>` env var's S3 object and
+  # `@INCLUDE`s it into the config ECS auto-generates — so [SERVICE] and
+  # [INPUT] stay auto-managed, and only the OUTPUT stanzas below are ours.
   fluent_bit_config = <<-EOT
-    [SERVICE]
-        Flush     5
-        Log_Level warn
-
-    [INPUT]
-        Name        forward
-        unix_path   /var/run/fluent.sock
-
     [OUTPUT]
         Name              cloudwatch_logs
         Match             *
