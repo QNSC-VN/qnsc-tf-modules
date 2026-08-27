@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.1...firelens-agent-v0.1.2) (2026-08-27)
+
+
+### Bug Fixes
+
+* **firelens-agent:** pin a real init version, fix opentelemetry output field names ([#94](https://github.com/QNSC-VN/qnsc-tf-modules/issues/94)) ([6c67d33](https://github.com/QNSC-VN/qnsc-tf-modules/commit/6c67d336d3aba0857f1f222bead06943a5ed7cd7))
+
 ## [0.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.0...firelens-agent-v0.1.1) (2026-08-27)
 
 
