@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.2.0...firelens-agent-v0.2.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* **firelens-agent:** stamp OTel resource attrs on log records, fix logs_body_key ([#100](https://github.com/QNSC-VN/qnsc-tf-modules/issues/100)) ([f666391](https://github.com/QNSC-VN/qnsc-tf-modules/commit/f66639170e40d9e7b10d4d0e321f27be94d7c794))
+
 ## [0.2.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.3...firelens-agent-v0.2.0) (2026-08-28)
 
 
