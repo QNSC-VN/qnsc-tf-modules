@@ -17,6 +17,9 @@ removed on purpose. See "Grafana only" below.
 module "firelens_agent" {
   source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/firelens-agent?ref=firelens-agent-v0.3.0"
 
+  service_name     = "rally-api"                                    # MUST match the app's own hardcoded OTel service name — see below
+  product          = var.product                                    # same value observability-agent's `product` gets
+  env              = var.env                                        # same value observability-agent's `env` gets
   otlp_endpoint    = var.otlp_endpoint                              # "" ⇒ no-op, same gate as observability-agent
   token_secret_arn = module.secrets.secret_arns["observability-token"]
   router_log_group = module.api.log_group_name                      # router's OWN diagnostics only — see below
@@ -120,6 +123,61 @@ credentials — AWS's docs state it plainly: *"IAM roles for tasks is
 different with ECS task execution role."* The execution role (boot-time:
 image pull, secrets/SSM injection) has nothing to do with this fetch.
 
+## Resource attributes — why a log line needs a Lua filter and metrics/traces don't
+
+Metrics and traces get `service.name` from the app's own OTel SDK, and
+`service.namespace`/`deployment.environment.name` from `observability-agent`'s
+`resource` processor as a backstop. A log line has neither: it is raw stdout
+text, no SDK in the path, so without this module doing it explicitly every
+record's OTel `service.name` was Grafana's fallback, **`unknown_service`** —
+found live, on develop, after the Grafana-only cutover: metrics/traces
+correctly filtered as `service_name="rally-api"` in Explore, but Loki had only
+one label value, `unknown_service`, for every service in the org.
+
+The generated config's `[FILTER] Name lua` stanza (`call add_resource`, inline
+`code`) sets a top-level `resource.attributes` map on every record before the
+`[OUTPUT]`. Two things about this are load-bearing, both found by reading the
+plugin's own C source rather than its `-h` text or docs, because the docs are
+wrong here:
+
+- **The plugin's `logs_resource_metadata_key` option (default `Resource`) does
+  NOTHING.** Confirmed in the pinned v5.0.9 source
+  (`opentelemetry.c`/`opentelemetry_conf.c`): declared, never dereferenced. The
+  real mechanism is a hardcoded record accessor, `$resource['attributes']`, so
+  the record needs a **lowercase** `resource.attributes` map with dotted OTel
+  keys (`service.name`, not `service_name`) — verified by running this exact
+  config against a local mock OTLP receiver and reading the decoded protobuf
+  payload before touching production.
+- **`code` (inline Lua source), not `script` (a file path).** A second S3
+  object holding a `.lua` file was considered and rejected: the FireLens init
+  process treats every `aws_fluent_bit_init_s3_<N>` object as a Fluent Bit
+  config fragment to `@INCLUDE` (or a parser file), with no third "plain
+  asset" category — confirmed against the init process's own Go source
+  (`processConfigFile`/`downloadS3ConfigFile`). A `.lua` file shipped that way
+  gets `@INCLUDE`d as config and fails to parse at startup. Inline `code`
+  needs no second object at all.
+
+**`service_name` must match the app's own hardcoded OTel service name exactly**
+(rally's `apps/api/src/app.module.ts` / `apps/worker/src/worker.module.ts` set
+`serviceName: 'rally-api'` / `'rally-worker'` directly — there is no shared
+Terraform var for it on the app side to read from, so this module's caller
+must type the same literal). A mismatch here doesn't error; it silently
+produces a THIRD `service_name` value in Grafana that nothing else uses.
+
+## `logs_body_key` is `log`, not `$message`
+
+The FireLens-generated `[INPUT]` preserves the Docker/ECS-agent forward
+protocol's own record shape, which nests the container's actual stdout line
+under a key literally named **`log`** — alongside `container_id`,
+`container_name`, `ecs_cluster`, `ecs_task_arn`, `ecs_task_definition`. An
+earlier revision set `logs_body_key $message`, which matched nothing: the
+plugin silently fell back to serializing the ENTIRE record — every one of
+those ECS metadata fields, JSON-encoded — as the OTel log body, instead of
+just the app's own line. Found and fixed together with the resource-attribute
+work above, verified against the same local mock receiver: with
+`logs_body_key log`, the body is exactly `{"level":30,"msg":"...",...}`, no
+envelope noise.
+
 ## The token
 
 Same secret `observability-agent` uses — the complete `Authorization` header
@@ -135,11 +193,17 @@ it is never assembled in Terraform.
 | `image` pinned to `init-3.4.14`, not `:init-latest` | `:init-latest` silently resolved to an ancient, incompatible Fluent Bit build — see above. Bump deliberately, and re-verify (`docker run ... -o opentelemetry -h`) before trusting a newer tag's schema. |
 | Config bucket, not SSM Parameter Store | The init process's `aws_fluent_bit_init_s3_<N>` mechanism only reads S3 objects; SSM is not an option here regardless of launch type. |
 | `force_destroy_config_bucket = true` (default) | The config is regenerated by Terraform on every apply, never hand-authored — nothing in this bucket is ever worth blocking a destroy over. |
+| Lua `code` inline, not `script` file | The init process `@INCLUDE`s every S3-listed file as config; a separate `.lua` object would fail to parse. See "Resource attributes" above. |
+| `logs_body_key log`, not `$message` | `$message` matches nothing in FireLens' actual record shape — the real key is `log`. See above. |
 
 ## Verification
 
-Same discipline as `observability-agent`: apply to develop, then confirm
-real log lines in Grafana Cloud Explore — CI green proves the container
-started, not that logs arrived. Query Loki for
-`{deployment_environment_name="develop"}` and expect real lines within
-minutes of a deploy.
+Same discipline as `observability-agent`: apply to develop, then confirm real
+log lines in Grafana Cloud Explore — CI green proves the container started,
+not that logs arrived. Query Loki for **`{service_name="rally-api"}`** (or
+`rally-worker`) and expect real, clean app log lines (no `container_id`/
+`ecs_cluster` envelope noise) within minutes of a deploy. `service_name` is
+the only label Grafana Cloud's OTLP-to-Loki path indexes here —
+`{deployment_environment_name="develop"}` returns NOTHING, confirmed live:
+that attribute rides as structured metadata on metrics/traces, not as a Loki
+stream label.

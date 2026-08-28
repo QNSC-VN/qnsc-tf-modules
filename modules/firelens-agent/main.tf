@@ -63,7 +63,48 @@ locals {
   # build, despite the tag's name. `init-3.4.14` (pinned in variables.tf) is
   # v5.0.9 and has the fields this config uses; confirmed by actually
   # starting the container against this exact config, not just parsing it.
+  #
+  # The Lua FILTER below is not optional decoration — without it every log
+  # record's OTel service.name is Grafana's fallback "unknown_service",
+  # verified live: real develop logs landed in Loki queryable only as
+  # {service_name="unknown_service"}, indistinguishable from every OTHER
+  # unconfigured product's logs, while this same service's metrics/traces
+  # correctly read service_name="rally-api" (set by the app's OTel SDK,
+  # which has no equivalent hook on a raw-stdout log path). The plugin's
+  # own `logs_resource_metadata_key` option (default "Resource") does
+  # NOTHING in the pinned v5.0.9 build — read from the plugin's actual C
+  # source (opentelemetry.c / opentelemetry_conf.c): it is declared but
+  # never dereferenced. The real mechanism is a hardcoded record accessor,
+  # `$resource['attributes']`, so the record must carry a top-level
+  # lowercase `resource.attributes` map with dotted OTel keys — confirmed by
+  # running this exact config against a local mock OTLP receiver and
+  # inspecting the decoded payload before touching production.
+  #
+  # `code` (inline Lua source), not `script` (a file path): the FireLens
+  # init process treats every S3 object listed via `aws_fluent_bit_init_s3_N`
+  # as a Fluent Bit config fragment to `@INCLUDE` (or a parser file) with NO
+  # third "plain asset" category (confirmed against the init process's own
+  # Go source) — a `.lua` file shipped that way would be `@INCLUDE`d as
+  # config and fail to parse. Inline `code` avoids needing a second S3
+  # object entirely.
+  #
+  # `logs_body_key log`, not `$message`: FireLens' generated INPUT preserves
+  # the Docker/ECS-agent forward-protocol record shape, which nests the
+  # container's actual stdout line under a key literally named `log` —
+  # confirmed by inspecting real records once they reached Loki, and by the
+  # same local mock-receiver test above. `$message` never matched anything,
+  # so every record's OTel log body was silently the ENTIRE raw envelope
+  # (container_id, ecs_cluster, ecs_task_arn, ecs_task_definition, log —
+  # all of it, JSON-serialized) instead of just the app's own line.
+  resource_lua_code = "function add_resource(tag, ts, record) record[\"resource\"]={attributes={[\"service.name\"]=\"${var.service_name}\",[\"service.namespace\"]=\"${var.product}\",[\"deployment.environment.name\"]=\"${var.env}\"}} return 1, ts, record end"
+
   fluent_bit_config = <<-EOT
+    [FILTER]
+        Name    lua
+        Match   *
+        call    add_resource
+        code    ${local.resource_lua_code}
+
     [OUTPUT]
         Name          opentelemetry
         Match         *
@@ -73,7 +114,7 @@ locals {
         tls           On
         tls.verify    On
         header        Authorization $${OBSERVABILITY_TOKEN}
-        logs_body_key $message
+        logs_body_key log
   EOT
 }
 

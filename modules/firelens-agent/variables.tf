@@ -4,6 +4,33 @@ variable "name" {
   default     = "firelens-log-router"
 }
 
+variable "service_name" {
+  description = <<-EOT
+    OTel `service.name` to stamp on every log record this router forwards —
+    must match the app's own hardcoded OTel service name (e.g. rally's
+    `apps/api/src/app.module.ts` sets `serviceName: 'rally-api'`) so a
+    service's metrics, traces AND logs land under the same `service_name` in
+    Grafana. There is no SDK on this path to set it automatically the way
+    observability-agent's `resource` processor backstops the app SDK — a
+    log line is a raw stdout string with no OTel Resource attached, so this
+    module must inject one via a Lua filter (see main.tf). Left unset, every
+    log record's `service.name` was `unknown_service` (Grafana's fallback),
+    making a service unfilterable in Loki even though the same service's
+    metrics/traces filtered correctly.
+  EOT
+  type        = string
+}
+
+variable "product" {
+  description = "Product slug. Becomes `service.namespace`, same convention and same value as observability-agent's `product` var — the two must agree, or a service's logs and its metrics/traces disagree about which namespace they belong to."
+  type        = string
+}
+
+variable "env" {
+  description = "Deployment environment as it should appear in telemetry (`develop`, `production`). Becomes `deployment.environment.name`, same convention and same value as observability-agent's `env` var. Deliberately NOT derived from NODE_ENV — see observability-agent's own variable for why."
+  type        = string
+}
+
 variable "otlp_endpoint" {
   description = <<-EOT
     Upstream OTLP/HTTP base URL, e.g.
