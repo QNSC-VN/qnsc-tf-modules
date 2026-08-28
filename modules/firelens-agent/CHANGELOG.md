@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.3...firelens-agent-v0.2.0) (2026-08-28)
+
+
+### Features
+
+* **firelens-agent:** drop CloudWatch dual-write, Grafana-only for logs ([#98](https://github.com/QNSC-VN/qnsc-tf-modules/issues/98)) ([dfba356](https://github.com/QNSC-VN/qnsc-tf-modules/commit/dfba356c2377179df2ef88b18e4fa4419b57203b))
+
 ## [0.1.3](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.1.2...firelens-agent-v0.1.3) (2026-08-27)
 
 
