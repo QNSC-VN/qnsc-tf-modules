@@ -15,13 +15,15 @@
 #   # And the app/worker containers' own logConfiguration switches from
 #   # `awslogs` to `awsfirelens` — see the module README.
 #
-# DUAL-WRITE, not a swap: the generated Fluent Bit config fans every log line
-# out to BOTH `cloudwatch_logs` (compliance retention, unchanged destination)
-# AND `opentelemetry` (Grafana Cloud, the same backend observability-agent
-# already sends metrics/traces to). ECS only allows one logDriver per
-# container, so this — not keeping awslogs alongside awsfirelens on the app
-# container, which is not possible — is how both destinations are satisfied
-# at once.
+# GRAFANA ONLY, deliberately, not a CloudWatch dual-write. That was tried:
+# FireLens' `cloudwatch_logs` output makes its own CloudWatch Logs API calls
+# from inside the router container (unlike `awslogs`, whose writes are the
+# ECS agent's own, via the execution role — no app-level IAM needed there).
+# Granting the task role `logs:CreateLogStream`/`PutLogEvents` would have
+# fixed it, but the org decided CloudWatch isn't worth keeping once Grafana
+# already has the same data — no confirmed data-residency/compliance need
+# for an AWS-native copy. If that changes, re-add the second `[OUTPUT]`
+# block and the task-role grant together; don't do one without the other.
 #
 # Why AWS's official image, not the community Grafana Loki Fluent Bit plugin:
 # that plugin is no longer actively maintained (Grafana's own docs say so).
@@ -63,14 +65,6 @@ locals {
   # starting the container against this exact config, not just parsing it.
   fluent_bit_config = <<-EOT
     [OUTPUT]
-        Name              cloudwatch_logs
-        Match             *
-        region            ${var.region}
-        log_group_name    ${var.cloudwatch_log_group}
-        log_stream_prefix firelens-
-        auto_create_group false
-
-    [OUTPUT]
         Name          opentelemetry
         Match         *
         host          ${local.otlp_host}
@@ -87,7 +81,7 @@ module "config_bucket" {
   count  = local.enabled ? 1 : 0
   source = "../app-bucket"
 
-  name          = "${var.name}-${substr(md5(var.cloudwatch_log_group), 0, 8)}-config"
+  name          = "${var.name}-${substr(md5(var.router_log_group), 0, 8)}-config"
   kms_key_arn   = var.kms_key_arn
   force_destroy = var.force_destroy_config_bucket
   tags          = var.tags
