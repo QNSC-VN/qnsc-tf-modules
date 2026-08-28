@@ -23,7 +23,7 @@ module "alerts" {
   env                       = var.env
   grafana_url               = var.grafana_alerting.url
   grafana_auth              = var.grafana_alerting.auth        # CI secret, e.g. GRAFANA_ALERTS_TOKEN — see below
-  prometheus_datasource_uid = var.grafana_alerting.prometheus_datasource_uid
+  prometheus_datasource_name = var.grafana_alerting.prometheus_datasource_name
   folder_uid                = var.grafana_alerting.folder_uid
 
   rules = [
@@ -58,6 +58,20 @@ place for it. This token is needed at TERRAFORM PLAN/APPLY time only —
 nothing running in a task ever calls the Grafana instance API — so putting
 it in Secrets Manager would just be a second, unnecessary place a leaked
 task credential could reach it from.
+
+## `prometheus_datasource_name`, not a UID
+
+This module resolves the Mimir datasource's UID itself (`data
+"grafana_data_source"`, in main.tf), from a NAME passed in. It does not take
+the UID directly. Found the hard way: qnsc-infra/live/observability
+originally did that lookup centrally and passed the UID down — which broke
+`tofu plan` on a fresh apply with `Error: the Grafana client is required
+for this resource`, because a `data` source (unlike a resource) can't defer
+its read to apply time, and the service account token that read would
+authenticate with does not exist yet in the SAME plan that creates it. This
+module never hits that: `grafana_url`/`grafana_auth` here are always plain,
+already-known CI-secret values by the time any product applies, never a
+same-run resource attribute — no bootstrap ordering problem to have.
 
 ## Query shape — why instant + threshold, not a range query
 

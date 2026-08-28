@@ -36,6 +36,17 @@ provider "grafana" {
   auth = var.grafana_auth
 }
 
+# Resolved HERE, not passed in as a UID: this `data` read against the
+# Grafana instance API is safe in this module because grafana_url/
+# grafana_auth are always plain, already-known values by apply time (a CI
+# secret) — unlike qnsc-infra/live/observability, where the service account
+# token this would authenticate with is still being created in the SAME
+# plan on a fresh apply, and a data source can't defer to apply the way a
+# resource can. See prometheus_datasource_name's own description.
+data "grafana_data_source" "prometheus" {
+  name = var.prometheus_datasource_name
+}
+
 resource "grafana_rule_group" "this" {
   name             = "${var.product} (${var.env})"
   folder_uid       = var.folder_uid
@@ -60,7 +71,7 @@ resource "grafana_rule_group" "this" {
       data {
         ref_id         = "A"
         query_type     = "instant"
-        datasource_uid = var.prometheus_datasource_uid
+        datasource_uid = data.grafana_data_source.prometheus.uid
 
         relative_time_range {
           from = 900 # 15m lookback — enough for rate()/histogram_quantile() windows up to 5m with margin
@@ -69,7 +80,7 @@ resource "grafana_rule_group" "this" {
 
         model = jsonencode({
           refId      = "A"
-          datasource = { type = "prometheus", uid = var.prometheus_datasource_uid }
+          datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus.uid }
           expr       = rule.value.promql
           instant    = true
           range      = false

@@ -19,8 +19,18 @@ variable "grafana_auth" {
   sensitive   = true
 }
 
-variable "prometheus_datasource_uid" {
-  description = "qnsc-infra/live/observability's `alerting_prometheus_datasource_uid` output — the Mimir datasource every rule below queries."
+variable "prometheus_datasource_name" {
+  description = <<-EOT
+    qnsc-infra/live/observability's `alerting_prometheus_datasource_name`
+    output. A NAME, not a UID: this module looks up the UID itself (see
+    main.tf) rather than taking it as an input, because that lookup is a
+    `data` read against the Grafana instance API — safe to do HERE, where
+    `grafana_url`/`grafana_auth` are always plain, already-known values by
+    apply time (a CI secret, not a same-run resource attribute), but NOT
+    safe in qnsc-infra/live/observability itself, where the service account
+    token that read would authenticate with is still being created in the
+    SAME plan on a fresh apply.
+  EOT
   type        = string
 }
 
