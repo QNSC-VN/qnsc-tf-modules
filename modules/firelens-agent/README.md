@@ -202,8 +202,16 @@ Same discipline as `observability-agent`: apply to develop, then confirm real
 log lines in Grafana Cloud Explore — CI green proves the container started,
 not that logs arrived. Query Loki for **`{service_name="rally-api"}`** (or
 `rally-worker`) and expect real, clean app log lines (no `container_id`/
-`ecs_cluster` envelope noise) within minutes of a deploy. `service_name` is
-the only label Grafana Cloud's OTLP-to-Loki path indexes here —
-`{deployment_environment_name="develop"}` returns NOTHING, confirmed live:
-that attribute rides as structured metadata on metrics/traces, not as a Loki
-stream label.
+`ecs_cluster` envelope noise) within minutes of a deploy.
+
+**Grafana Cloud's OTLP-to-Loki path promotes exactly the Resource attributes
+this module sets, and no others** — confirmed live, before and after the
+resource-attribute fix. Before it (no `resource.attributes` on the record at
+all), the ONLY stream label was `service_name=unknown_service`; after it, the
+labels are `service_name`, `service_namespace`, `deployment_environment_name`
+— the same three keys the Lua filter stamps, nothing more. So
+`{deployment_environment_name="develop"}` alone is a valid query once this
+fix ships, but was empty before it. Don't add a fourth Resource attribute
+here without checking Grafana Cloud's cardinality guidance first — an
+indexed Loki label with high cardinality (anything with an ID in it) is a
+cost/perf problem the same way a high-cardinality metric label is.
