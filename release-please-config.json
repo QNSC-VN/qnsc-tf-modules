@@ -59,6 +59,9 @@
     "modules/observability-agent": {
       "component": "observability-agent"
     },
+    "modules/observability-alerts": {
+      "component": "observability-alerts"
+    },
     "modules/oneshot-task": {
       "component": "oneshot-task"
     },
