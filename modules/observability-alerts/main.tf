@@ -133,9 +133,10 @@ resource "grafana_rule_group" "this" {
         severity = rule.value.severity
       }
 
-      annotations = {
-        summary = rule.value.summary
-      }
+      annotations = merge(
+        { summary = rule.value.summary },
+        rule.value.runbook_url != "" ? { runbook_url = rule.value.runbook_url } : {}
+      )
     }
   }
 }
