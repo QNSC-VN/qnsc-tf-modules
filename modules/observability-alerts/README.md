@@ -30,7 +30,7 @@ provider "grafana" {
 ```hcl
 module "alerts" {
   count  = var.grafana_alerting_auth != "" ? 1 : 0
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability-alerts?ref=observability-alerts-v1.0.0"
+  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability-alerts?ref=observability-alerts-v1.1.0"
 
   product                    = "rally"
   env                        = var.env
@@ -39,13 +39,16 @@ module "alerts" {
 
   rules = [
     {
-      name      = "db-pool-contention"
-      promql    = "db_pool_waiting{deployment_environment_name=\"${var.env}\"}"
-      for       = "5m"
-      op        = "gt"
-      threshold = 0
-      severity  = "warning"
-      summary   = "Connections are queueing for the DB pool in ${var.env} — pool is undersized or a query is holding connections too long."
+      name        = "db-pool-contention"
+      promql      = "db_pool_waiting{deployment_environment_name=\"${var.env}\"}"
+      for         = "5m"
+      op          = "gt"
+      threshold   = 0
+      severity    = "warning"
+      summary     = "Connections are queueing for the DB pool in ${var.env} — pool is undersized or a query is holding connections too long."
+      # Optional (default ""). Rendered by Grafana as a clickable link on the
+      # fired alert — nothing else about the rule changes.
+      runbook_url = "https://github.com/my-org/my-repo/blob/main/docs/runbooks/alerts/db-pool-contention.md"
     },
   ]
 }

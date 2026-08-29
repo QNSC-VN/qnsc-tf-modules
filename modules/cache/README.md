@@ -14,7 +14,7 @@ Valkey (Redis-compatible) on ElastiCache. Two modes:
 
 ```hcl
 module "cache" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/cache?ref=cache-v1.0.0"
+  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/cache?ref=cache-v1.1.0"
 
   name              = "myproduct-prod"
   subnet_ids        = module.network.data_subnet_ids
@@ -33,6 +33,14 @@ module "cache" {
 ## Outputs
 
 `endpoint`, `port`, `reader_endpoint` — work in both modes.
+
+`cluster_id` — node mode only, `null` for serverless. The CloudWatch `CacheClusterId`
+dimension every AWS/ElastiCache metric is published under (the provider's own
+`member_clusters` value, not a guessed `<replication_group_id>-001` string) — pass it to
+the `observability` module's `cache_cluster_id` input to get CPU/free-memory/eviction
+alarms wired for this node. Not usable for serverless: it publishes a different metric
+set entirely (`ElastiCacheProcessingUnits`, `BytesUsedForCache`, no
+`FreeableMemory`/`Evictions` in the same shape).
 
 ## Requirements
 
