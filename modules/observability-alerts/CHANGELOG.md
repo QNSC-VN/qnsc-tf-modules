@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-alerts-v1.0.0...observability-alerts-v1.1.0) (2026-08-29)
+
+
+### Features
+
+* **observability-alerts:** optional runbook_url annotation per rule ([#109](https://github.com/QNSC-VN/qnsc-tf-modules/issues/109)) ([2762b1f](https://github.com/QNSC-VN/qnsc-tf-modules/commit/2762b1faff39aa036e33e2e10755f2960be6ff62))
+
 ## [1.0.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-alerts-v0.1.0...observability-alerts-v1.0.0) (2026-08-29)
 
 
