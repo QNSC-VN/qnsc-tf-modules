@@ -15,16 +15,27 @@ CloudWatch alert on something only Grafana has data for.
 
 ## Usage
 
+The ROOT module (not this one) must configure the `grafana` provider — this
+module has none of its own, deliberately (see "Why no provider block here"
+below):
+
+```hcl
+# infra/live/develop/main.tf (or wherever the root provider config lives)
+provider "grafana" {
+  url  = var.grafana_alerting_url
+  auth = var.grafana_alerting_auth   # CI secret, e.g. GRAFANA_ALERTS_TOKEN
+}
+```
+
 ```hcl
 module "alerts" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability-alerts?ref=observability-alerts-v0.1.0"
+  count  = var.grafana_alerting_auth != "" ? 1 : 0
+  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability-alerts?ref=observability-alerts-v0.2.0"
 
-  product                   = "rally"
-  env                       = var.env
-  grafana_url               = var.grafana_alerting.url
-  grafana_auth              = var.grafana_alerting.auth        # CI secret, e.g. GRAFANA_ALERTS_TOKEN — see below
-  prometheus_datasource_name = var.grafana_alerting.prometheus_datasource_name
-  folder_uid                = var.grafana_alerting.folder_uid
+  product                    = "rally"
+  env                        = var.env
+  prometheus_datasource_name = var.grafana_alerting_prometheus_datasource_name
+  folder_uid                 = var.grafana_alerting_folder_uid
 
   rules = [
     {
@@ -39,6 +50,21 @@ module "alerts" {
   ]
 }
 ```
+
+## Why no provider block here
+
+Tried first, and a real dead end, not a style call: this module originally
+configured its own `provider "grafana" {}`. Terraform REFUSES `count`/
+`for_each` on any module that configures its own provider ("Module does
+not support count/for_each, because it contains its own provider
+configuration") — and gating this module off when no alerting token
+exists yet, the same dormant-until-configured pattern every other module
+in this family uses, needs exactly that `count`. The fix: this module
+declares NO provider block, only `required_providers` (so Terraform knows
+which plugin its resources need); the ROOT configures the one `grafana`
+provider, and Terraform inherits it down through every module in between
+automatically — the default, documented behavior for a single unaliased
+provider, no `configuration_aliases`/`providers =` passthrough required.
 
 ## Why a second credential, not the OTLP push token
 
@@ -69,9 +95,10 @@ originally did that lookup centrally and passed the UID down — which broke
 for this resource`, because a `data` source (unlike a resource) can't defer
 its read to apply time, and the service account token that read would
 authenticate with does not exist yet in the SAME plan that creates it. This
-module never hits that: `grafana_url`/`grafana_auth` here are always plain,
-already-known CI-secret values by the time any product applies, never a
-same-run resource attribute — no bootstrap ordering problem to have.
+module never hits that: the inherited provider's credentials here are
+always a plain, already-known CI-secret value by the time any product
+applies, never a same-run resource attribute — no bootstrap ordering
+problem to have.
 
 ## Query shape — why instant + threshold, not a range query
 

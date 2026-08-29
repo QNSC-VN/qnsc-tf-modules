@@ -8,28 +8,17 @@ variable "env" {
   type        = string
 }
 
-variable "grafana_url" {
-  description = "The Grafana instance URL — qnsc-infra/live/observability's `alerting_grafana_url` output."
-  type        = string
-}
-
-variable "grafana_auth" {
-  description = "Stack service account token — qnsc-infra/live/observability's `alerting_service_account_token` output, reached via a CI secret (e.g. GRAFANA_ALERTS_TOKEN), never AWS Secrets Manager. See that repo's main.tf for why this is a different credential from the OTLP push token."
-  type        = string
-  sensitive   = true
-}
-
 variable "prometheus_datasource_name" {
   description = <<-EOT
     qnsc-infra/live/observability's `alerting_prometheus_datasource_name`
     output. A NAME, not a UID: this module looks up the UID itself (see
     main.tf) rather than taking it as an input, because that lookup is a
     `data` read against the Grafana instance API — safe to do HERE, where
-    `grafana_url`/`grafana_auth` are always plain, already-known values by
-    apply time (a CI secret, not a same-run resource attribute), but NOT
-    safe in qnsc-infra/live/observability itself, where the service account
-    token that read would authenticate with is still being created in the
-    SAME plan on a fresh apply.
+    the inherited provider's credentials are always a plain, already-known
+    value by apply time (a CI secret, not a same-run resource attribute),
+    but NOT safe in qnsc-infra/live/observability itself, where the service
+    account token that read would authenticate with is still being created
+    in the SAME plan on a fresh apply.
   EOT
   type        = string
 }

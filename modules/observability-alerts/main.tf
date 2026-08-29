@@ -8,10 +8,21 @@
 # the same data qnsc-infra/live/observability's stack already ingests.
 #
 # Uses a SECOND Grafana credential from observability-agent/firelens-agent's
-# OTLP push token: alert-rule CRUD happens through the Grafana INSTANCE API
-# (this module's `grafana_url`/`grafana_auth` provider config), not the
-# Grafana Cloud ORG API the stack itself is managed through. See
+# OTLP push token: alert-rule CRUD happens through the Grafana INSTANCE API,
+# not the Grafana Cloud ORG API the stack itself is managed through. See
 # qnsc-infra/live/observability/main.tf's "Alerting" header comment.
+#
+# This module does NOT configure its own `provider "grafana"` block — the
+# CALLER (the root module) does, once, and this inherits it automatically
+# (Terraform's default behavior for an unaliased provider used by a child
+# module — no `configuration_aliases`/`providers =` passthrough needed for
+# a single default provider config). This was tried the other way first —
+# a provider block inside this module — and it is a real dead end, not a
+# style preference: Terraform REFUSES `count`/`for_each` on any module that
+# configures its own provider ("Module does not support count/for_each"),
+# and gating this module off when no alerting token exists yet (mirroring
+# every other dormant-until-configured module in this family) needs exactly
+# that.
 #
 # Each rule is the classic two-node Grafana Alerting pipeline — an instant
 # Prometheus query (ref A) feeding a `__expr__` threshold node (ref B) — NOT
@@ -31,18 +42,14 @@ terraform {
   }
 }
 
-provider "grafana" {
-  url  = var.grafana_url
-  auth = var.grafana_auth
-}
-
 # Resolved HERE, not passed in as a UID: this `data` read against the
-# Grafana instance API is safe in this module because grafana_url/
-# grafana_auth are always plain, already-known values by apply time (a CI
-# secret) — unlike qnsc-infra/live/observability, where the service account
-# token this would authenticate with is still being created in the SAME
-# plan on a fresh apply, and a data source can't defer to apply the way a
-# resource can. See prometheus_datasource_name's own description.
+# Grafana instance API is safe in this module because the inherited
+# provider's credentials are always a plain, already-known value by apply
+# time (a CI secret) — unlike qnsc-infra/live/observability, where the
+# service account token that provider would authenticate with is still
+# being created in the SAME plan on a fresh apply, and a data source can't
+# defer to apply the way a resource can. See prometheus_datasource_name's
+# own description.
 data "grafana_data_source" "prometheus" {
   name = var.prometheus_datasource_name
 }
