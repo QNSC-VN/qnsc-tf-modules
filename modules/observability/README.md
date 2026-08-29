@@ -1,15 +1,16 @@
 # observability
 
 SNS-backed CloudWatch alarms + a dashboard for the golden signals of an
-ECS-on-ALB-with-RDS service (ECS CPU/mem, ALB 5xx/latency, RDS
-CPU/free-storage/connections). Cheap (~$0.10/mo alarms, ~$3/mo dashboard) and
-additive — wire it from a product stack with handles it already has.
+ECS-on-ALB-with-RDS(-and-optionally-ElastiCache) service (ECS CPU/mem, ALB
+5xx/latency, RDS CPU/free-storage/connections, cache CPU/free-memory/evictions).
+Cheap (~$0.10/mo alarms, ~$3/mo dashboard) and additive — wire it from a product
+stack with handles it already has.
 
 ## Usage
 
 ```hcl
 module "observability" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability?ref=observability-v4.0.0"
+  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability?ref=observability-v4.2.0"
 
   name              = "rally-prod"
   region            = var.aws_region
@@ -17,6 +18,9 @@ module "observability" {
   ecs_service_names = [module.api.service_name, module.worker.service_name]
   alb_arn           = data.terraform_remote_state.runtime.outputs.alb_arn
   rds_instance_id   = module.rds.identifier
+  # Node mode only, and never for a SHARED cache node — see cache_cluster_id's
+  # own description in variables.tf. null/"" for serverless or a shared node.
+  cache_cluster_id  = module.cache[0].cluster_id
   # Required for the two per-target-group alarms (latency, unhealthy hosts).
   target_group_arns = { api = module.api.target_group_arn }
   alarm_emails      = ["oncall@qnsc.vn"]
@@ -33,6 +37,7 @@ module "observability" {
 | `<name>-<tg>-alb-latency-high` | Target group | p95, **only evaluated in periods with ≥ `alb_latency_min_requests` requests**. |
 | `<name>-<tg>-targets-unhealthy` | Target group | `treat_missing_data = "breaching"`. Disable via `monitor_target_health` where zero tasks is normal. |
 | `<name>-rds-*` | RDS instance | CPU, free storage, connections. |
+| `<name>-cache-*` | ElastiCache node | CPU, free memory, any eviction. Node mode only — see `cache_cluster_id`. |
 
 Both target-group alarms are scoped by `TargetGroup`, not `LoadBalancer`, because the
 ALB is **shared across products** — a load-balancer-wide dimension aggregates every
@@ -60,6 +65,7 @@ value; above it the alarm behaves normally.
 | `ecs_service_names` | list(string) | `[]` | Services to alarm on. |
 | `alb_arn` | string | `""` | Full ALB ARN. Empty = skip ALB alarms. |
 | `rds_instance_id` | string | `""` | RDS DBInstanceIdentifier. Empty = skip RDS alarms. |
+| `cache_cluster_id` | string | `""` | ElastiCache `CacheClusterId` — the cache module's own `cluster_id` output (node mode only). Empty = skip cache alarms. Never wire this for a SHARED cache node. |
 | `target_group_arns` | map(string) | `{}` | Service name => target group ARN. Required for the latency and unhealthy-host alarms. |
 | `monitor_target_health` | bool | `true` | Create the unhealthy-host alarm. False where zero running tasks is normal. |
 | `alarm_emails` | list(string) | `[]` | Emails subscribed to the alarm topic. |
