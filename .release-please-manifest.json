@@ -22,5 +22,5 @@
   "modules/cloudflare-turnstile": "1.0.0",
   "modules/cf-tunnel": "0.2.1",
   "modules/firelens-agent": "0.2.1",
-  "modules/observability-alerts": "0.1.0"
+  "modules/observability-alerts": "1.0.0"
 }
