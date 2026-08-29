@@ -47,12 +47,13 @@ variable "rules" {
     expression evaluator types — NOT `>`/`<`, which the API rejects).
   EOT
   type = list(object({
-    name      = string
-    promql    = string
-    for       = string # e.g. "5m" — how long the condition must hold before firing
-    op        = string
-    threshold = number
-    severity  = optional(string, "warning")
-    summary   = string # annotation shown in the notification
+    name        = string
+    promql      = string
+    for         = string # e.g. "5m" — how long the condition must hold before firing
+    op          = string
+    threshold   = number
+    severity    = optional(string, "warning")
+    summary     = string               # annotation shown in the notification
+    runbook_url = optional(string, "") # rendered by Grafana as a clickable link on the alert; "" omits the annotation entirely
   }))
 }
