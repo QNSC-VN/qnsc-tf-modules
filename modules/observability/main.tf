@@ -250,6 +250,60 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
   tags                = var.tags
 }
 
+# ── Cache (ElastiCache/Valkey) alarms ────────────────────────────────────────
+# Node mode only — see cache_cluster_id's own description for why a shared node is
+# never wired here, and the cache module's cluster_id output for why serverless is
+# out of scope (different metric set entirely).
+resource "aws_cloudwatch_metric_alarm" "cache_cpu" {
+  count               = var.cache_cluster_id != "" ? 1 : 0
+  alarm_name          = "${var.name}-cache-cpu-high"
+  namespace           = "AWS/ElastiCache"
+  metric_name         = "EngineCPUUtilization"
+  dimensions          = { CacheClusterId = var.cache_cluster_id }
+  statistic           = "Average"
+  period              = 300
+  evaluation_periods  = 3
+  threshold           = var.thresholds.cache_cpu_pct
+  comparison_operator = "GreaterThanThreshold"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  tags                = var.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "cache_free_memory" {
+  count               = var.cache_cluster_id != "" ? 1 : 0
+  alarm_name          = "${var.name}-cache-free-memory-low"
+  namespace           = "AWS/ElastiCache"
+  metric_name         = "FreeableMemory"
+  dimensions          = { CacheClusterId = var.cache_cluster_id }
+  statistic           = "Average"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = var.thresholds.cache_free_bytes
+  comparison_operator = "LessThanThreshold"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  tags                = var.tags
+}
+
+# Evictions is the direct signal that the working set no longer fits — auth token
+# denylist entries and rate-limiter counters silently getting evicted early is a
+# security-relevant failure mode (see libs/platform's fail-open notes), not just a
+# performance one, so this fires on ANY eviction rather than a tuned threshold.
+resource "aws_cloudwatch_metric_alarm" "cache_evictions" {
+  count               = var.cache_cluster_id != "" ? 1 : 0
+  alarm_name          = "${var.name}-cache-evictions"
+  namespace           = "AWS/ElastiCache"
+  metric_name         = "Evictions"
+  dimensions          = { CacheClusterId = var.cache_cluster_id }
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = var.thresholds.cache_evictions
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  tags                = var.tags
+}
+
 # ── Dashboard ────────────────────────────────────────────────────────────────
 # Optional, unlike the alarms above. CloudWatch gives 3 dashboards free per ACCOUNT
 # and then charges $3/mo each, so a dashboard per environment per product starts
@@ -294,6 +348,19 @@ resource "aws_cloudwatch_dashboard" "this" {
           metrics = [
             ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.rds_instance_id],
             ["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", var.rds_instance_id],
+          ]
+        }
+      }] : [],
+      var.cache_cluster_id != "" ? [{
+        type = "metric", x = 0, y = 12, width = 12, height = 6
+        properties = {
+          title  = "Cache — CPU / free memory / evictions"
+          region = var.region
+          view   = "timeSeries"
+          metrics = [
+            ["AWS/ElastiCache", "EngineCPUUtilization", "CacheClusterId", var.cache_cluster_id],
+            ["AWS/ElastiCache", "FreeableMemory", "CacheClusterId", var.cache_cluster_id],
+            ["AWS/ElastiCache", "Evictions", "CacheClusterId", var.cache_cluster_id],
           ]
         }
       }] : [],

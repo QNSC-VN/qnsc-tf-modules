@@ -61,8 +61,27 @@ variable "thresholds" {
     rds_free_bytes           = optional(number, 2147483648) # 2 GiB
     rds_connections          = optional(number, 100)
     unhealthy_hosts          = optional(number, 0) # any unhealthy target is worth knowing about
+    cache_cpu_pct            = optional(number, 85)
+    cache_free_bytes         = optional(number, 52428800) # 50 MiB — cache.t4g.micro has ~500MB usable
+    cache_evictions          = optional(number, 0)        # any eviction means the working set no longer fits
   })
   default = {}
+}
+
+variable "cache_cluster_id" {
+  type        = string
+  default     = ""
+  description = <<-EOT
+    ElastiCache CloudWatch `CacheClusterId` dimension — the cache module's own
+    `cluster_id` output (node mode only). Empty skips the cache alarms.
+
+    Deliberately NOT wired for a SHARED cache node (rally develop, qnsc-infra
+    live/runtime-dev's module.shared_cache): the node serves more than one product,
+    so an alarm named after just one of them would misattribute exactly like the
+    ALB-wide latency alarm did before it was scoped per target group (see
+    alb_latency above). A shared node's alarms belong where the node is created,
+    not in a single tenant's stack.
+  EOT
 }
 
 variable "target_group_arns" {
