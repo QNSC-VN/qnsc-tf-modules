@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.3.1...ecs-service-v2.3.2) (2026-08-30)
+
+
+### Bug Fixes
+
+* **ecs-service:** grant the task role kms:Decrypt for its own S3 reads ([#116](https://github.com/QNSC-VN/qnsc-tf-modules/issues/116)) ([01f89ec](https://github.com/QNSC-VN/qnsc-tf-modules/commit/01f89ecb54f54726cde499ec54417b114a598825))
+
 ## [2.3.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/ecs-service-v2.3.0...ecs-service-v2.3.1) (2026-08-27)
 
 
