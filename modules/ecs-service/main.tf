@@ -138,6 +138,23 @@ data "aws_iam_policy_document" "task_s3" {
     actions   = ["s3:ListBucket", "s3:GetBucketLocation"]
     resources = var.s3_bucket_arns
   }
+  # A KMS-encrypted bucket needs kms:Decrypt on top of s3:GetObject, or the read
+  # fails identically fatally — confirmed live: firelens-agent's own S3 config
+  # fetch (task_s3_bucket_arns, this variable) against app-bucket's org-standard
+  # KMS-at-rest bucket failed with AccessDenied on kms:Decrypt, not s3:GetObject,
+  # because this policy granted only the latter. This was previously covered only
+  # as a SIDE EFFECT of also passing `task_secret_arns` (whose own policy document
+  # separately grants kms:Decrypt on the same CMK) — callers that pass
+  # `s3_bucket_arns` + `kms_key_arn` but no `task_secret_arns` got no such grant at
+  # all. Gated on `kms_key_arn` alone, independent of every other reason the task
+  # role might need KMS.
+  dynamic "statement" {
+    for_each = var.kms_key_arn != "" ? [1] : []
+    content {
+      actions   = ["kms:Decrypt"]
+      resources = [var.kms_key_arn]
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "task_s3" {
