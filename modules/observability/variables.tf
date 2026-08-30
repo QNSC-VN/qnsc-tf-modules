@@ -73,7 +73,8 @@ variable "cache_cluster_id" {
   default     = ""
   description = <<-EOT
     ElastiCache CloudWatch `CacheClusterId` dimension — the cache module's own
-    `cluster_id` output (node mode only). Empty skips the cache alarms.
+    `cluster_id` output (node mode only). Used only as an alarm DIMENSION value;
+    see `enable_cache_alarms` for whether the alarms are created at all.
 
     Deliberately NOT wired for a SHARED cache node (rally develop, qnsc-infra
     live/runtime-dev's module.shared_cache): the node serves more than one product,
@@ -81,6 +82,23 @@ variable "cache_cluster_id" {
     ALB-wide latency alarm did before it was scoped per target group (see
     alb_latency above). A shared node's alarms belong where the node is created,
     not in a single tenant's stack.
+  EOT
+}
+
+variable "enable_cache_alarms" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Whether to create the three cache alarms (cache_cpu/cache_free_memory/
+    cache_evictions). A SEPARATE bool from cache_cluster_id being non-empty,
+    deliberately: on an environment's first-ever apply the cache module's
+    cluster_id output is unknown until apply (the node doesn't exist yet), and
+    a `count` meta-argument that depends on that unknown value is a hard
+    OpenTofu error ("Invalid count argument"), not a deferred plan. This flag
+    must come from something known at PLAN time — e.g. the caller's own
+    `var.cache.enabled && var.cache.mode == "node"` — while cache_cluster_id
+    itself (possibly unknown-until-apply) stays a plain resource argument,
+    which Terraform allows.
   EOT
 }
 

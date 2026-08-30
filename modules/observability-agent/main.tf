@@ -27,7 +27,12 @@
 # =============================================================================
 
 locals {
-  enabled = var.otlp_endpoint != "" && var.token_secret_arn != ""
+  # otlp_endpoint ALONE — see firelens-agent's identical local for why checking
+  # token_secret_arn too breaks a from-scratch environment's first apply
+  # (the ARN is unknown-until-apply there, and this local currently only
+  # feeds non-count expressions here, but that is incidental, not a
+  # guarantee — keep both twin modules' gating logic identical).
+  enabled = var.otlp_endpoint != ""
 
   # Collector configuration, passed inline via AOT_CONFIG_CONTENT rather than baked
   # into an image or fetched from S3/SSM — it keeps the config reviewable in the
