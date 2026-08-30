@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-agent-v1.0.0...observability-agent-v1.0.1) (2026-08-30)
+
+
+### Bug Fixes
+
+* unblock a stack's first-ever apply from empty state ([#114](https://github.com/QNSC-VN/qnsc-tf-modules/issues/114)) ([ed98a68](https://github.com/QNSC-VN/qnsc-tf-modules/commit/ed98a68cc65473b2ba3f300c2e334c6bca879b3e))
+
 ## 1.0.0 (2026-07-27)
 
 
