@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.2.1...firelens-agent-v0.2.2) (2026-08-30)
+
+
+### Bug Fixes
+
+* unblock a stack's first-ever apply from empty state ([#114](https://github.com/QNSC-VN/qnsc-tf-modules/issues/114)) ([ed98a68](https://github.com/QNSC-VN/qnsc-tf-modules/commit/ed98a68cc65473b2ba3f300c2e334c6bca879b3e))
+
 ## [0.2.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/firelens-agent-v0.2.0...firelens-agent-v0.2.1) (2026-08-28)
 
 
