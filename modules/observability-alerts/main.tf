@@ -63,7 +63,17 @@ resource "grafana_rule_group" "this" {
     for_each = { for r in var.rules : r.name => r }
 
     content {
-      name      = rule.value.name
+      # PREFIXED with product+env, not the bare rule name: Grafana enforces alert
+      # RULE NAME uniqueness per FOLDER, not per rule group — confirmed by a real
+      # prod apply failure ("rule with name \"db-pool-contention\" already exists
+      # in the folder"), the moment a second product/env's rule group landed in
+      # the SAME shared Alerts folder every product's rules share by design. Two
+      # rule groups both naming a rule "db-pool-contention" collided the instant
+      # both existed, invisible for the entire time only one environment's rules
+      # were live — the same "invisible until the second one arrives" shape as
+      # the notification group_by and dashboard service_namespace bugs earlier.
+      # Fixed HERE, not per-caller, so opshub/qnsc-kb-backend can never hit it.
+      name      = "${var.product}-${var.env}-${rule.value.name}"
       condition = "B"
       for       = rule.value.for
       # A query returning no series (nothing scheduled, no traffic yet) is
