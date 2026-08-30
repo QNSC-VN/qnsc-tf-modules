@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-alerts-v1.1.0...observability-alerts-v1.1.1) (2026-08-30)
+
+
+### Bug Fixes
+
+* **observability-alerts:** prefix rule names with product+env ([#112](https://github.com/QNSC-VN/qnsc-tf-modules/issues/112)) ([98a6b85](https://github.com/QNSC-VN/qnsc-tf-modules/commit/98a6b8526c9cb8c66264dd26a9a44920e9f56b08))
+
 ## [1.1.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-alerts-v1.0.0...observability-alerts-v1.1.0) (2026-08-29)
 
 
