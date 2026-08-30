@@ -36,7 +36,16 @@
 # =============================================================================
 
 locals {
-  enabled = var.otlp_endpoint != "" && var.token_secret_arn != ""
+  # otlp_endpoint ALONE, deliberately — not "&& var.token_secret_arn != ''".
+  # Every caller creates the secret under the same otlp_endpoint condition, so
+  # the ARN is always eventually real; the difference is WHEN it is known.
+  # On an environment's first-ever apply the secret doesn't exist yet, so its
+  # ARN is unknown-until-apply, and `enabled` fed straight into config_bucket's
+  # and fluent_bit_config's `count` — an unknown count is a hard error
+  # ("Invalid count argument"), not a deferred plan. otlp_endpoint is a plain
+  # string variable, always known at plan time, so this predicate can safely
+  # gate a count on every apply, first or not.
+  enabled = var.otlp_endpoint != ""
 
   # Fluent Bit's opentelemetry output takes host/port/uri separately, not one
   # endpoint URL — split what observability-agent's otlphttp exporter takes

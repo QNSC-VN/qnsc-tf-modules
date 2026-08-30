@@ -255,7 +255,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
 # never wired here, and the cache module's cluster_id output for why serverless is
 # out of scope (different metric set entirely).
 resource "aws_cloudwatch_metric_alarm" "cache_cpu" {
-  count               = var.cache_cluster_id != "" ? 1 : 0
+  count               = var.enable_cache_alarms ? 1 : 0
   alarm_name          = "${var.name}-cache-cpu-high"
   namespace           = "AWS/ElastiCache"
   metric_name         = "EngineCPUUtilization"
@@ -270,7 +270,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cache_free_memory" {
-  count               = var.cache_cluster_id != "" ? 1 : 0
+  count               = var.enable_cache_alarms ? 1 : 0
   alarm_name          = "${var.name}-cache-free-memory-low"
   namespace           = "AWS/ElastiCache"
   metric_name         = "FreeableMemory"
@@ -289,7 +289,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_free_memory" {
 # security-relevant failure mode (see libs/platform's fail-open notes), not just a
 # performance one, so this fires on ANY eviction rather than a tuned threshold.
 resource "aws_cloudwatch_metric_alarm" "cache_evictions" {
-  count               = var.cache_cluster_id != "" ? 1 : 0
+  count               = var.enable_cache_alarms ? 1 : 0
   alarm_name          = "${var.name}-cache-evictions"
   namespace           = "AWS/ElastiCache"
   metric_name         = "Evictions"
