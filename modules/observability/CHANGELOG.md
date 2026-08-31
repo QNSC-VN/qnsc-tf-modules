@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.0](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-v4.2.1...observability-v4.3.0) (2026-08-31)
+
+
+### Features
+
+* **observability:** opt-in RDS CPUCreditBalance and FreeableMemory alarms ([#119](https://github.com/QNSC-VN/qnsc-tf-modules/issues/119)) ([d703983](https://github.com/QNSC-VN/qnsc-tf-modules/commit/d7039837f623e11f5a6e647d09a54315cbe080c1))
+
 ## [4.2.1](https://github.com/QNSC-VN/qnsc-tf-modules/compare/observability-v4.2.0...observability-v4.2.1) (2026-08-30)
 
 
