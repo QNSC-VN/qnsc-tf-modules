@@ -60,10 +60,35 @@ variable "thresholds" {
     rds_cpu_pct              = optional(number, 85)
     rds_free_bytes           = optional(number, 2147483648) # 2 GiB
     rds_connections          = optional(number, 100)
-    unhealthy_hosts          = optional(number, 0) # any unhealthy target is worth knowing about
-    cache_cpu_pct            = optional(number, 85)
-    cache_free_bytes         = optional(number, 52428800) # 50 MiB — cache.t4g.micro has ~500MB usable
-    cache_evictions          = optional(number, 0)        # any eviction means the working set no longer fits
+    # ── Burstable-instance signals, both OPT-IN (0 = do not create the alarm) ──
+    #
+    # Deliberately defaulted OFF rather than given a working threshold, which is the
+    # opposite of every other key here. Two reasons:
+    #
+    #  1. A correct floor is a function of the INSTANCE CLASS, not of the service. A
+    #     db.t4g.micro earns 24 CPU credits/hour and holds a 576-credit maximum; a
+    #     db.t4g.medium earns 96/hour. A db.m6g has no credit metric at all, so any
+    #     non-zero default would arm an alarm against a metric that is never published
+    #     and park it in INSUFFICIENT_DATA — the same "looks like coverage, matches no
+    #     metric" failure that rds_instance_id's validation exists to prevent.
+    #  2. Every product already consuming this module (ceo-suite, solodesk,
+    #     qnsc-kb-backend, opshub) must upgrade with a no-op plan. An additive default
+    #     would create alarms in four stacks that nobody sized, reviewed, or expects.
+    #
+    # So the caller who runs burstable states its own floor, and everyone else is
+    # untouched. Sizing guidance lives in the README.
+    rds_cpu_credit_min = optional(number, 0)
+    # MEGABYTES, not bytes — unlike rds_free_bytes/cache_free_bytes above. The
+    # operator-facing number for a 1 GiB instance is "alert me under 200 MB", and
+    # writing that as 209715200 in a live/main.tf is where an order-of-magnitude typo
+    # goes unnoticed in review. The alarm multiplies up to bytes itself because the
+    # AWS/RDS FreeableMemory metric is published in bytes; the unit lives in the
+    # variable NAME so the conversion cannot be forgotten at the call site.
+    rds_freeable_memory_mb = optional(number, 0)
+    unhealthy_hosts        = optional(number, 0) # any unhealthy target is worth knowing about
+    cache_cpu_pct          = optional(number, 85)
+    cache_free_bytes       = optional(number, 52428800) # 50 MiB — cache.t4g.micro has ~500MB usable
+    cache_evictions        = optional(number, 0)        # any eviction means the working set no longer fits
   })
   default = {}
 }

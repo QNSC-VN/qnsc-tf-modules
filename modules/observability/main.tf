@@ -250,6 +250,88 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
   tags                = var.tags
 }
 
+# ── Burstable-instance RDS alarms (opt-in) ───────────────────────────────────
+# Both are gated on their threshold being > 0 as well as on rds_instance_id, so a
+# caller that has not sized a floor gets no alarm — see the two keys' comments in
+# variables.tf for why these default off while every other threshold defaults on.
+#
+# They exist because a burstable instance does not fail, it DEGRADES, and the three
+# alarms above cannot see that. A prod p99-latency page on rally's db.t4g.micro is
+# what found this: the runbook in the product's live/main.tf named CPUCreditBalance
+# and FreeableMemory as the first signals to check, but neither had an alarm, so the
+# only thing that fired was the downstream symptom hours after the cause.
+#
+# Conventions follow the rds_* siblings exactly: AWS/RDS, DBInstanceIdentifier taken
+# from var.rds_instance_id (the module's existing, validated handle — no new input),
+# Average over a 300s period, alarm_actions only, var.tags. `treat_missing_data` is
+# left at the provider default for the same reason the siblings leave it: a stopped
+# or non-burstable instance publishes nothing, and reading that as INSUFFICIENT_DATA
+# rather than as a breach is the behaviour var.environment_idle already documents.
+resource "aws_cloudwatch_metric_alarm" "rds_cpu_credit" {
+  count       = var.rds_instance_id != "" && var.thresholds.rds_cpu_credit_min > 0 ? 1 : 0
+  alarm_name  = "${var.name}-rds-cpu-credit-low"
+  namespace   = "AWS/RDS"
+  metric_name = "CPUCreditBalance"
+  dimensions  = { DBInstanceIdentifier = var.rds_instance_id }
+  statistic   = "Average"
+  period      = 300
+  # 1, matching rds_storage rather than the 3 used by rds_cpu/rds_connections. The
+  # two utilization alarms need 3 periods to ride out spikes; a credit balance is a
+  # slow-draining accumulator that cannot spike, so a second confirmation period only
+  # spends credits the operator was being warned about.
+  evaluation_periods  = 1
+  threshold           = var.thresholds.rds_cpu_credit_min
+  comparison_operator = "LessThanThreshold"
+  alarm_description = join(" ", [
+    "CPUCreditBalance on ${var.rds_instance_id} has fallen below ${var.thresholds.rds_cpu_credit_min} credits,",
+    "meaning the instance has been running above its CPU baseline for long enough to spend",
+    "most of its accumulated burst allowance. A burstable (db.t*) class earns credits only",
+    "while below baseline and spends them to exceed it; once the balance is gone the",
+    "instance is held at baseline or billed for surplus, depending on its burst mode.",
+    "This needs its own alarm because exhaustion does not look like a failure: a throttled",
+    "instance sits pinned at its baseline percentage, so CPUUtilization reads as healthy",
+    "while every query gets slower, and the breach surfaces downstream as application p99",
+    "latency instead. Treat a falling balance as sustained load above baseline — shed the",
+    "load, or move off the burstable class before the balance reaches zero.",
+  ])
+  alarm_actions = [aws_sns_topic.alarms.arn]
+  tags          = var.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "rds_freeable_memory" {
+  count       = var.rds_instance_id != "" && var.thresholds.rds_freeable_memory_mb > 0 ? 1 : 0
+  alarm_name  = "${var.name}-rds-freeable-memory-low"
+  namespace   = "AWS/RDS"
+  metric_name = "FreeableMemory"
+  dimensions  = { DBInstanceIdentifier = var.rds_instance_id }
+  statistic   = "Average"
+  period      = 300
+  # 1, matching rds_storage and cache_free_memory — the other two floor alarms here.
+  # A memory floor that has already been crossed is not made truer by waiting.
+  evaluation_periods = 1
+  # MB -> bytes. The metric is published in bytes; the variable is in megabytes so the
+  # call site reads as an operator sizing decision rather than a nine-digit constant.
+  # Kept as an inline expression rather than a local because it is used exactly once,
+  # and the multiplication next to the threshold is what makes the unit mismatch
+  # between variable and metric visible to a reviewer.
+  threshold           = var.thresholds.rds_freeable_memory_mb * 1024 * 1024
+  comparison_operator = "LessThanThreshold"
+  alarm_description = join(" ", [
+    "FreeableMemory on ${var.rds_instance_id} has fallen below",
+    "${var.thresholds.rds_freeable_memory_mb} MB. On a burstable instance this is how the",
+    "working set outgrowing RAM presents itself: PostgreSQL loses its filesystem cache",
+    "first, so reads that were served from memory start hitting EBS and the database gets",
+    "steadily slower without returning a single error. If it keeps falling, the host runs",
+    "out of memory and the engine is restarted, which costs a failover-length outage.",
+    "It is alarmed separately from CPU and connections because neither of those moves",
+    "while this one does — the degradation is latency, not utilization and not an error",
+    "rate. Check for a query plan that started sorting on disk, a connection count that",
+    "outgrew the instance's per-connection work_mem, or a table that no longer fits.",
+  ])
+  alarm_actions = [aws_sns_topic.alarms.arn]
+  tags          = var.tags
+}
+
 # ── Cache (ElastiCache/Valkey) alarms ────────────────────────────────────────
 # Node mode only — see cache_cluster_id's own description for why a shared node is
 # never wired here, and the cache module's cluster_id output for why serverless is
@@ -348,6 +430,24 @@ resource "aws_cloudwatch_dashboard" "this" {
           metrics = [
             ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.rds_instance_id],
             ["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", var.rds_instance_id],
+          ]
+        }
+      }] : [],
+      # Burst headroom, on its own widget and gated on the same opt-in as the two
+      # alarms above rather than folded into the RDS widget. Two reasons: a caller
+      # that has not sized these floors must see a no-op plan on upgrade, and the
+      # dashboard_body is part of the diff — and credits (hundreds) next to CPU
+      # percent and a connection count would be a fourth series on an axis it does
+      # not share, which is the same reason FreeableMemory gets the right axis here.
+      var.rds_instance_id != "" && (var.thresholds.rds_cpu_credit_min > 0 || var.thresholds.rds_freeable_memory_mb > 0) ? [{
+        type = "metric", x = 12, y = 12, width = 12, height = 6
+        properties = {
+          title  = "RDS burst — CPU credits / freeable memory"
+          region = var.region
+          view   = "timeSeries"
+          metrics = [
+            ["AWS/RDS", "CPUCreditBalance", "DBInstanceIdentifier", var.rds_instance_id],
+            ["AWS/RDS", "FreeableMemory", "DBInstanceIdentifier", var.rds_instance_id, { yAxis = "right" }],
           ]
         }
       }] : [],
