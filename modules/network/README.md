@@ -9,7 +9,7 @@ resources.
 
 ```hcl
 module "network" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/network?ref=network-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/network?ref=network-v1.0.0"
 
   name                 = "myproduct-prod"
   region               = "ap-southeast-1"

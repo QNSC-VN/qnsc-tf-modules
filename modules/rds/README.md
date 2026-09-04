@@ -8,7 +8,7 @@ optional query-stats parameter group, and optional enhanced monitoring.
 
 ```hcl
 module "rds" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/rds?ref=rds-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/rds?ref=rds-v1.0.0"
 
   identifier        = "myproduct-prod"
   subnet_ids        = module.network.data_subnet_ids

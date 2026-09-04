@@ -1,7 +1,7 @@
 # =============================================================================
 # Security · Scan — IaC misconfig + committed-secret gate for the modules.
 #
-# The shared QNSC-VN/qnsc-ci security suite is app/container oriented (Semgrep
+# The shared quynhonsemiconductor/qnsc-ci security suite is app/container oriented (Semgrep
 # TS/Node packs, Trivy image CVEs) and is the wrong tool for pure OpenTofu, so
 # this repo runs the IaC-native pair instead (same shape as qnsc-infra):
 #   • Checkov  — Terraform/OpenTofu misconfig scan over modules/. ENFORCED
@@ -37,7 +37,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: QNSC-VN/qnsc-ci/.github/workflows/actions-security.yml@v1
+    uses: quynhonsemiconductor/qnsc-ci/.github/workflows/actions-security.yml@v1
     with:
       blocking: true
 
@@ -54,7 +54,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkov scan
-        uses: bridgecrewio/checkov-action@5659ddea96102e16d8f221b3d8402453c0b1c150 # v12.3121.0
+        uses: bridgecrewio/checkov-action@59b9d7edfcad5b87fbe3f473a9a134a721ad03f8 # v12.3119.0
         with:
           directory: modules/
           framework: terraform
@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4
         with:
           sarif_file: checkov.sarif
         continue-on-error: true
@@ -84,4 +84,4 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: QNSC-VN/qnsc-ci/actions/scan-secrets@v1.13.1
+      - uses: quynhonsemiconductor/qnsc-ci/actions/scan-secrets@v1

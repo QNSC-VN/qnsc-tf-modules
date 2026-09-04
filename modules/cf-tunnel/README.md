@@ -4,7 +4,7 @@ Creates a Cloudflare Tunnel and returns its id, CNAME target and connector token
 
 ```hcl
 module "tunnel" {
-  source     = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/cf-tunnel?ref=cf-tunnel-v0.1.0"
+  source     = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/cf-tunnel?ref=cf-tunnel-v0.1.0"
   account_id = var.cloudflare_account_id
   name       = "${var.product}-${var.env}"
 }

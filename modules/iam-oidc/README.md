@@ -18,23 +18,23 @@ Roles created:
 
 ```hcl
 module "iam_oidc" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/iam-oidc?ref=iam-oidc-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/iam-oidc?ref=iam-oidc-v1.0.0"
 
   product           = "myproduct"
-  github_org        = "QNSC-VN"
+  github_org        = "quynhonsemiconductor"
   oidc_provider_arn = data.terraform_remote_state.platform.outputs.oidc_provider_arn
 
   environments = {
     develop = {
       allowed_subjects = [
-        "repo:QNSC-VN/myproduct-api:ref:refs/heads/main",
-        "repo:QNSC-VN/myproduct-api:environment:develop",
+        "repo:quynhonsemiconductor/myproduct-api:ref:refs/heads/main",
+        "repo:quynhonsemiconductor/myproduct-api:environment:develop",
       ]
     }
     production = {
       allowed_subjects = [
-        "repo:QNSC-VN/myproduct-api:ref:refs/heads/main",
-        "repo:QNSC-VN/myproduct-api:ref:refs/tags/v*",
+        "repo:quynhonsemiconductor/myproduct-api:ref:refs/heads/main",
+        "repo:quynhonsemiconductor/myproduct-api:ref:refs/tags/v*",
       ]
     }
   }
@@ -57,7 +57,7 @@ module "iam_oidc" {
 | Name | Type | Default | Description |
 | :--- | :--- | :------ | :---------- |
 | `product` | `string` | — | Role name prefix |
-| `github_org` | `string` | `QNSC-VN` | GitHub org |
+| `github_org` | `string` | `quynhonsemiconductor` | GitHub org |
 | `oidc_provider_arn` | `string` | — | OIDC provider ARN (from qnsc-infra) |
 | `environments` | `map(object)` | — | env → `{ allowed_subjects }` |
 | `app_repo_names` | `list(string)` | — | Repos allowed to assume ecr-push |

@@ -10,7 +10,7 @@ exported `https_listener_arn`.
 
 ```hcl
 module "alb" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/alb?ref=alb-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/alb?ref=alb-v1.0.0"
 
   name                       = "qnsc-runtime-prod"
   security_group_ids         = [module.network.sg_alb_id]

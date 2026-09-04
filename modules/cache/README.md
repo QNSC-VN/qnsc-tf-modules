@@ -14,7 +14,7 @@ Valkey (Redis-compatible) on ElastiCache. Two modes:
 
 ```hcl
 module "cache" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/cache?ref=cache-v1.1.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/cache?ref=cache-v1.1.0"
 
   name              = "myproduct-prod"
   subnet_ids        = module.network.data_subnet_ids

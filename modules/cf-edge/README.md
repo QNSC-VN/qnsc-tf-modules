@@ -28,7 +28,7 @@ If the edge WAF is chosen for prod, **drop the AWS `waf` module from
 
 ```hcl
 module "edge" {
-  source  = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/cf-edge?ref=cf-edge-v1.0.0"
+  source  = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/cf-edge?ref=cf-edge-v1.0.0"
   zone_id = data.terraform_remote_state.bootstrap.outputs.cloudflare_zone_id
 
   rate_limit_rules = [{

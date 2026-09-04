@@ -64,7 +64,7 @@ locals {
   # So every subject is trusted in both shapes. The rewrite is deliberately NOT a
   # loose wildcard: `ORG@*` requires the literal `@` immediately after the org name,
   # so it cannot match a different organisation whose name merely starts the same way
-  # (`QNSC-VN-evil`), and the same holds for the repository. `ORG*` would match both
+  # (`quynhonsemiconductor-evil`), and the same holds for the repository. `ORG*` would match both
   # and is the trap to avoid here.
   #
   # Additive: a repository on the old form keeps matching the named subject, so this

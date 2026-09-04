@@ -7,7 +7,7 @@ per-IP rate limiting, with CloudWatch logging and optional ALB association.
 
 ```hcl
 module "waf" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/waf?ref=waf-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/waf?ref=waf-v1.0.0"
 
   name    = "myproduct-prod"
   alb_arn = aws_lb.this.arn

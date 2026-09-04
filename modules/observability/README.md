@@ -11,7 +11,7 @@ stack with handles it already has.
 
 ```hcl
 module "observability" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability?ref=observability-v4.2.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/observability?ref=observability-v4.2.0"
 
   name              = "rally-prod"
   region            = var.aws_region

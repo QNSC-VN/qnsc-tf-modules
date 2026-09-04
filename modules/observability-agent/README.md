@@ -10,7 +10,7 @@ namespace — no service discovery, no cross-AZ hop, no extra security group.
 
 ```hcl
 module "otel_agent" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/observability-agent?ref=observability-agent-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/observability-agent?ref=observability-agent-v1.0.0"
 
   product          = "rally"
   env              = "develop"          # deployment identity, NOT NODE_ENV

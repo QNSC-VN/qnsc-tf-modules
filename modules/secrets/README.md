@@ -7,7 +7,7 @@ optional SSM Parameter Store entries for non-sensitive config.
 
 ```hcl
 module "secrets" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/secrets?ref=secrets-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/secrets?ref=secrets-v1.0.0"
 
   prefix      = "myproduct/develop"
   kms_key_arn = local.kms_key_arn

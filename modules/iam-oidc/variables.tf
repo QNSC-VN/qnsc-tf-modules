@@ -5,7 +5,7 @@ variable "product" {
 
 variable "github_org" {
   type        = string
-  default     = "QNSC-VN"
+  default     = "quynhonsemiconductor"
   description = "GitHub org/owner that hosts the product repos."
 }
 

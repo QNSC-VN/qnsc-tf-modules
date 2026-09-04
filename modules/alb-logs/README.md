@@ -8,7 +8,7 @@ incident / security / latency forensics.
 
 ```hcl
 module "alb_logs" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/alb-logs?ref=alb-logs-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/alb-logs?ref=alb-logs-v1.0.0"
 
   bucket_name    = "myproduct-prod-alb-logs"
   retention_days = 90

@@ -2,7 +2,7 @@
 
 Shared, versioned OpenTofu/Terraform modules for all QNSC products.
 
-This is the infrastructure counterpart to [`qnsc-ci`](https://github.com/QNSC-VN/qnsc-ci)
+This is the infrastructure counterpart to [`qnsc-ci`](https://github.com/quynhonsemiconductor/qnsc-ci)
 (shared CI actions): reusable Terraform building blocks live here once, are
 versioned per module, and are consumed by every product's `*-infra` repo. Fixes
 and improvements made here propagate to all products on their next version bump —
@@ -64,7 +64,7 @@ Reference a module by git source pinned to a **per-module version tag**:
 
 ```hcl
 module "network" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/network?ref=network-v1.1.2"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/network?ref=network-v1.1.2"
   # ... inputs
 }
 ```

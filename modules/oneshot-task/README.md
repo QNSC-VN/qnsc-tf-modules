@@ -9,7 +9,7 @@ the caller runs it.
 
 ```hcl
 module "migrator" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/oneshot-task?ref=oneshot-task-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/oneshot-task?ref=oneshot-task-v1.0.0"
 
   name               = "opshub-develop-migrator"
   container_name     = "migrator"

@@ -7,7 +7,7 @@ CloudWatch Container Insights.
 
 ```hcl
 module "ecs_cluster" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/ecs-cluster?ref=ecs-cluster-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/ecs-cluster?ref=ecs-cluster-v1.0.0"
 
   name = "myproduct-develop"
   tags = local.tags
