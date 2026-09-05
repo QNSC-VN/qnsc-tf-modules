@@ -7,7 +7,7 @@ and an optional repository policy granting pull/push to specified principals.
 
 ```hcl
 module "ecr" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/ecr?ref=ecr-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/ecr?ref=ecr-v1.0.0"
 
   repository_names = ["myproduct-api", "myproduct-worker"]
   kms_key_arn      = local.kms_key_arn      # omit for AES256

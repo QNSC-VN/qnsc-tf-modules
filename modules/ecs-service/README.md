@@ -8,7 +8,7 @@ listener rule, deployment circuit breaker, and CPU + memory autoscaling.
 
 ```hcl
 module "api" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/ecs-service?ref=ecs-service-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/ecs-service?ref=ecs-service-v1.0.0"
 
   service_name = "api"
   cluster_name = module.ecs_cluster.cluster_name

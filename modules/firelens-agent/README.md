@@ -15,7 +15,7 @@ removed on purpose. See "Grafana only" below.
 
 ```hcl
 module "firelens_agent" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/firelens-agent?ref=firelens-agent-v0.2.1"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/firelens-agent?ref=firelens-agent-v0.2.1"
 
   service_name     = "rally-api"                                    # MUST match the app's own hardcoded OTel service name — see below
   product          = var.product                                    # same value observability-agent's `product` gets

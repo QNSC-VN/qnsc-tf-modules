@@ -9,7 +9,7 @@ KMS-encrypted topics.
 
 ```hcl
 module "messaging" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/messaging?ref=messaging-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/messaging?ref=messaging-v1.0.0"
 
   prefix = "myproduct-develop"
 

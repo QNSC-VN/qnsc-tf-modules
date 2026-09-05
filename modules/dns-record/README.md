@@ -12,7 +12,7 @@ instead of erroring with "record already exists".
 
 ```hcl
 module "dns_api" {
-  source = "git::https://github.com/QNSC-VN/qnsc-tf-modules.git//modules/dns-record?ref=dns-record-v1.1.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/dns-record?ref=dns-record-v1.1.0"
 
   zone_id = data.terraform_remote_state.bootstrap.outputs.cloudflare_zone_id
   name    = "rally-api-dev"
