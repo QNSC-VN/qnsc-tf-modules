@@ -12,7 +12,7 @@ var (e.g. `S3_FILES_BUCKET` / `S3_ATTACHMENTS_BUCKET`).
 
 ```hcl
 module "app_bucket" {
-  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/app-bucket?ref=app-bucket-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/app-bucket?ref=app-bucket-v1.0.0"
 
   name          = "opshub-develop-uploads"
   kms_key_arn   = data.terraform_remote_state.bootstrap.outputs.kms_key_arn

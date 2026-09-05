@@ -30,7 +30,7 @@ provider "grafana" {
 ```hcl
 module "alerts" {
   count  = var.grafana_alerting_auth != "" ? 1 : 0
-  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/observability-alerts?ref=observability-alerts-v1.1.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/observability-alerts?ref=observability-alerts-v1.1.0"
 
   product                    = "rally"
   env                        = var.env

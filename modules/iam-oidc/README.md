@@ -18,7 +18,7 @@ Roles created:
 
 ```hcl
 module "iam_oidc" {
-  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/iam-oidc?ref=iam-oidc-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/iam-oidc?ref=iam-oidc-v1.0.0"
 
   product           = "myproduct"
   github_org        = "quynhonsemiconductor"

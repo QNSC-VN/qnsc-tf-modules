@@ -20,7 +20,7 @@ provider-agnostic `StorageService` (aws-sdk S3 client, `region="auto"`,
 
 ```hcl
 module "attachments" {
-  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/cf-r2?ref=cf-r2-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/cf-r2?ref=cf-r2-v1.0.0"
 
   account_id = data.terraform_remote_state.bootstrap.outputs.cloudflare_account_id
   name       = "rally-develop-attachments"

@@ -18,7 +18,7 @@ CNAME (Pages does not create the DNS record for a custom domain itself).
 
 ```hcl
 module "web" {
-  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/pages-web?ref=pages-web-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/pages-web?ref=pages-web-v1.0.0"
 
   account_id  = var.cloudflare_account_id
   name        = "rally-develop-web"

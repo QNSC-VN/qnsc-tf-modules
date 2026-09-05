@@ -27,7 +27,7 @@ secrets are provisioned out-of-band and never live in an app's config/state.**
 
 ```hcl
 module "landing_turnstile" {
-  source = "git::https://github.com/quynhonsemiconductor/qnsc-tf-modules.git//modules/cloudflare-turnstile?ref=cloudflare-turnstile-v1.0.0"
+  source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/cloudflare-turnstile?ref=cloudflare-turnstile-v1.0.0"
 
   account_id = var.cloudflare_account_id
   name       = "qnsc-landing"
