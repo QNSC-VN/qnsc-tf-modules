@@ -1,6 +1,6 @@
 variable "product" {
   type        = string
-  description = "Product name; prefixes every role (e.g. \"rally\" → rally-github-deploy-*)."
+  description = "Product name; prefixes every role (e.g. \"rova\" → rova-github-deploy-*)."
 }
 
 variable "github_org" {

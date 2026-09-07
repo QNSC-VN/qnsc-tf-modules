@@ -13,7 +13,7 @@ stack with handles it already has.
 module "observability" {
   source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/observability?ref=observability-v4.2.0"
 
-  name              = "rally-prod"
+  name              = "rova-prod"
   region            = var.aws_region
   ecs_cluster_name  = module.ecs_cluster.cluster_name
   ecs_service_names = [module.api.service_name, module.worker.service_name]

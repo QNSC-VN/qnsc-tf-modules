@@ -12,7 +12,7 @@ namespace — no service discovery, no cross-AZ hop, no extra security group.
 module "otel_agent" {
   source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/observability-agent?ref=observability-agent-v1.0.0"
 
-  product          = "rally"
+  product          = "rova"
   env              = "develop"          # deployment identity, NOT NODE_ENV
   otlp_endpoint    = var.otlp_endpoint  # "" ⇒ module is a no-op
   token_secret_arn = module.secrets.secret_arns["observability-token"]
@@ -55,7 +55,7 @@ Create it empty in Terraform and populate out of band:
 
 ```bash
 aws secretsmanager put-secret-value \
-  --secret-id rally/develop/observability-token \
+  --secret-id rova/develop/observability-token \
   --secret-string "Basic $(printf '%s:%s' "$INSTANCE_ID" "$TOKEN" | base64 -w0)"
 ```
 

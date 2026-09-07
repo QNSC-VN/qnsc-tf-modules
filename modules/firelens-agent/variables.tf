@@ -7,8 +7,8 @@ variable "name" {
 variable "service_name" {
   description = <<-EOT
     OTel `service.name` to stamp on every log record this router forwards —
-    must match the app's own hardcoded OTel service name (e.g. rally's
-    `apps/api/src/app.module.ts` sets `serviceName: 'rally-api'`) so a
+    must match the app's own hardcoded OTel service name (e.g. rova's
+    `apps/api/src/app.module.ts` sets `serviceName: 'rova-api'`) so a
     service's metrics, traces AND logs land under the same `service_name` in
     Grafana. There is no SDK on this path to set it automatically the way
     observability-agent's `resource` processor backstops the app SDK — a

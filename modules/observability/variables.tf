@@ -28,7 +28,7 @@ variable "rds_instance_id" {
   type        = string
   default     = ""
   description = <<-EOT
-    DB instance IDENTIFIER (e.g. `rally-prod`) — the value RDS publishes as the
+    DB instance IDENTIFIER (e.g. `rova-prod`) — the value RDS publishes as the
     CloudWatch `DBInstanceIdentifier` dimension. Empty skips the RDS alarms.
 
     NOT the resource id. `aws_db_instance.id` returns `db-XXXX…` on AWS provider 5.x,

@@ -69,7 +69,7 @@ variable "alb_path_patterns" {
 variable "alb_host_headers" {
   type        = list(string)
   default     = []
-  description = "Host headers for the ALB listener rule. Set for shared-ALB host-based routing (e.g. [\"rally-api.qnsc.vn\"]); empty keeps the rule path-only."
+  description = "Host headers for the ALB listener rule. Set for shared-ALB host-based routing (e.g. [\"rova-api.qnsc.vn\"]); empty keeps the rule path-only."
 }
 variable "health_check_path" {
   type    = string

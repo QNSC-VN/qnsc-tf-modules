@@ -37,7 +37,7 @@ output "instance_id" {
 
 output "identifier" {
   value       = aws_db_instance.this.identifier
-  description = "DB instance identifier (e.g. `rally-prod`) — the CloudWatch DBInstanceIdentifier dimension value."
+  description = "DB instance identifier (e.g. `rova-prod`) — the CloudWatch DBInstanceIdentifier dimension value."
 }
 
 output "instance_arn" {

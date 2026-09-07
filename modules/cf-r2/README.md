@@ -23,12 +23,12 @@ module "attachments" {
   source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/cf-r2?ref=cf-r2-v1.0.0"
 
   account_id = data.terraform_remote_state.bootstrap.outputs.cloudflare_account_id
-  name       = "rally-develop-attachments"
+  name       = "rova-develop-attachments"
   location   = "apac" # co-locate with ap-southeast-1
 
   cors_rules = [{
     allowed_methods = ["PUT", "GET"]
-    allowed_origins = ["https://rally-dev.qnsc.vn"]
+    allowed_origins = ["https://rova-dev.qnsc.vn"]
     allowed_headers = ["*"]
   }]
 
@@ -74,7 +74,7 @@ product stack therefore needs **no** Cloudflare provider to consume R2.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `hostname` | `string` | — | e.g. `rally-assets.qnsc.vn`. |
+| `hostname` | `string` | — | e.g. `rova-assets.qnsc.vn`. |
 | `zone_id` | `string` | — | Cloudflare zone the hostname belongs to. |
 
 > ⚠️ Attaching a custom domain makes **every object in the bucket readable by

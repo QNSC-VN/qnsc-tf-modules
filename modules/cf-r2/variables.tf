@@ -5,7 +5,7 @@ variable "account_id" {
 
 variable "name" {
   type        = string
-  description = "R2 bucket name (e.g. \"rally-develop-attachments\"). Immutable; changing it replaces the bucket."
+  description = "R2 bucket name (e.g. \"rova-develop-attachments\"). Immutable; changing it replaces the bucket."
 }
 
 variable "location" {

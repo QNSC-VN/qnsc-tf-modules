@@ -26,7 +26,7 @@ module "alb" {
 
 | Name | Type | Default | Description |
 | :--- | :--- | :------ | :---------- |
-| `name` | string | — | ALB name (e.g. `rally-develop`). |
+| `name` | string | — | ALB name (e.g. `rova-develop`). |
 | `security_group_ids` | list(string) | — | SGs for the ALB (typically `network.sg_alb_id`). |
 | `subnet_ids` | list(string) | — | Public subnet IDs the ALB spans. |
 | `certificate_arn` | string | — | ACM cert ARN for the HTTPS listener (ap-southeast-1). |

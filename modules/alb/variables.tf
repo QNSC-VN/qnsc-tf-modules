@@ -1,6 +1,6 @@
 variable "name" {
   type        = string
-  description = "ALB name (e.g. \"rally-develop\")."
+  description = "ALB name (e.g. \"rova-develop\")."
 }
 
 variable "security_group_ids" {

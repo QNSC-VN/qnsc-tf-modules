@@ -17,7 +17,7 @@ removed on purpose. See "Grafana only" below.
 module "firelens_agent" {
   source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/firelens-agent?ref=firelens-agent-v0.2.1"
 
-  service_name     = "rally-api"                                    # MUST match the app's own hardcoded OTel service name — see below
+  service_name     = "rova-api"                                    # MUST match the app's own hardcoded OTel service name — see below
   product          = var.product                                    # same value observability-agent's `product` gets
   env              = var.env                                        # same value observability-agent's `env` gets
   otlp_endpoint    = var.otlp_endpoint                              # "" ⇒ no-op, same gate as observability-agent
@@ -131,7 +131,7 @@ Metrics and traces get `service.name` from the app's own OTel SDK, and
 text, no SDK in the path, so without this module doing it explicitly every
 record's OTel `service.name` was Grafana's fallback, **`unknown_service`** —
 found live, on develop, after the Grafana-only cutover: metrics/traces
-correctly filtered as `service_name="rally-api"` in Explore, but Loki had only
+correctly filtered as `service_name="rova-api"` in Explore, but Loki had only
 one label value, `unknown_service`, for every service in the org.
 
 The generated config's `[FILTER] Name lua` stanza (`call add_resource`, inline
@@ -158,8 +158,8 @@ wrong here:
   needs no second object at all.
 
 **`service_name` must match the app's own hardcoded OTel service name exactly**
-(rally's `apps/api/src/app.module.ts` / `apps/worker/src/worker.module.ts` set
-`serviceName: 'rally-api'` / `'rally-worker'` directly — there is no shared
+(rova's `apps/api/src/app.module.ts` / `apps/worker/src/worker.module.ts` set
+`serviceName: 'rova-api'` / `'rova-worker'` directly — there is no shared
 Terraform var for it on the app side to read from, so this module's caller
 must type the same literal). A mismatch here doesn't error; it silently
 produces a THIRD `service_name` value in Grafana that nothing else uses.
@@ -200,8 +200,8 @@ it is never assembled in Terraform.
 
 Same discipline as `observability-agent`: apply to develop, then confirm real
 log lines in Grafana Cloud Explore — CI green proves the container started,
-not that logs arrived. Query Loki for **`{service_name="rally-api"}`** (or
-`rally-worker`) and expect real, clean app log lines (no `container_id`/
+not that logs arrived. Query Loki for **`{service_name="rova-api"}`** (or
+`rova-worker`) and expect real, clean app log lines (no `container_id`/
 `ecs_cluster` envelope noise) within minutes of a deploy.
 
 **Grafana Cloud's OTLP-to-Loki path promotes exactly the Resource attributes

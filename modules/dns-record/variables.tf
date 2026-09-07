@@ -15,7 +15,7 @@ variable "zone_id" {
 
 variable "name" {
   type        = string
-  description = "Record name / subdomain (e.g. \"rally-dev\" for rally-dev.qnsc.vn), or \"@\" for the zone apex."
+  description = "Record name / subdomain (e.g. \"rova-dev\" for rova-dev.qnsc.vn), or \"@\" for the zone apex."
 }
 
 variable "type" {

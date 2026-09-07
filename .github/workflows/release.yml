@@ -1,5 +1,5 @@
 # =============================================================================
-# Release — thin caller of the shared reusable (qnsc-ci). Runs release-please
+# Release — thin caller of the shared reusable (ci). Runs release-please
 # in MANIFEST / multi-component mode: each modules/<name> directory is versioned
 # independently and tagged as `<name>-vX.Y.Z` (e.g. ecr-v1.1.0), matching how
 # consumers pin `?ref=<name>-vX.Y.Z`. Before this, those tags were cut by hand.

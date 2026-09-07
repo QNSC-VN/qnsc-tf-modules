@@ -1,6 +1,6 @@
 variable "name" {
   type        = string
-  description = "Bucket name (e.g. \"rally-develop-attachments\")."
+  description = "Bucket name (e.g. \"rova-develop-attachments\")."
 }
 
 variable "kms_key_arn" {

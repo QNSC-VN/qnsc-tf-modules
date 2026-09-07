@@ -32,7 +32,7 @@ module "alerts" {
   count  = var.grafana_alerting_auth != "" ? 1 : 0
   source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/observability-alerts?ref=observability-alerts-v1.1.0"
 
-  product                    = "rally"
+  product                    = "rova"
   env                        = var.env
   prometheus_datasource_name = var.grafana_alerting_prometheus_datasource_name
   folder_uid                 = var.grafana_alerting_folder_uid

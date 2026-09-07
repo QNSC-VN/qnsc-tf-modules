@@ -1,6 +1,6 @@
 variable "name" {
   type        = string
-  description = "Task definition family + log group suffix (e.g. \"rally-develop-migrator\")."
+  description = "Task definition family + log group suffix (e.g. \"rova-develop-migrator\")."
 }
 
 variable "container_name" {
@@ -11,7 +11,7 @@ variable "container_name" {
 
 variable "image" {
   type        = string
-  description = "Container image URI (e.g. <acct>.dkr.ecr.<region>.amazonaws.com/rally-migrator:latest)."
+  description = "Container image URI (e.g. <acct>.dkr.ecr.<region>.amazonaws.com/rova-migrator:latest)."
 }
 
 variable "command" {

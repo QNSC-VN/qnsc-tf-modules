@@ -21,13 +21,13 @@ module "web" {
   source = "git::https://github.com/quynhonsemiconductor/tf-modules.git//modules/pages-web?ref=pages-web-v1.0.0"
 
   account_id  = var.cloudflare_account_id
-  name        = "rally-develop-web"
+  name        = "rova-develop-web"
   zone_id     = local.cloudflare_zone_id
-  domain      = "rally-dev.qnsc.vn"
-  record_name = "rally-dev"
+  domain      = "rova-dev.qnsc.vn"
+  record_name = "rova-dev"
 
   production_env_vars = {
-    VITE_API_URL = "https://rally-api-dev.qnsc.vn"
+    VITE_API_URL = "https://rova-api-dev.qnsc.vn"
   }
 }
 ```

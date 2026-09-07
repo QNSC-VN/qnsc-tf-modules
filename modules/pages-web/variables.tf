@@ -5,7 +5,7 @@ variable "account_id" {
 
 variable "name" {
   type        = string
-  description = "Pages project name (e.g. \"rally-develop-web\"). Also the <name>.pages.dev subdomain."
+  description = "Pages project name (e.g. \"rova-develop-web\"). Also the <name>.pages.dev subdomain."
 }
 
 variable "production_branch" {
@@ -27,7 +27,7 @@ variable "production_env_vars" {
 variable "domain" {
   type        = string
   default     = ""
-  description = "Custom domain to serve the SPA on (e.g. \"rally-dev.qnsc.vn\"). Empty = pages.dev only."
+  description = "Custom domain to serve the SPA on (e.g. \"rova-dev.qnsc.vn\"). Empty = pages.dev only."
 }
 
 variable "zone_id" {
@@ -39,7 +39,7 @@ variable "zone_id" {
 variable "record_name" {
   type        = string
   default     = ""
-  description = "DNS record name / subdomain for the custom domain (e.g. \"rally-dev\"). Required when domain is set."
+  description = "DNS record name / subdomain for the custom domain (e.g. \"rova-dev\"). Required when domain is set."
 }
 
 variable "comment" {

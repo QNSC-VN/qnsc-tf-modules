@@ -113,8 +113,8 @@ variable "log_retention_days" {
     the fix: three instances, three different answers, none of them in code.
 
         /aws/rds/instance/qnsc-kb-develop/postgresql    None   (never expires)
-        /aws/rds/instance/rally-develop/postgresql      7      (set by hand)
-        /aws/rds/instance/rally-prod/postgresql         90     (set by hand)
+        /aws/rds/instance/rova-develop/postgresql      7      (set by hand)
+        /aws/rds/instance/rova-prod/postgresql         90     (set by hand)
 
     Cheap to ignore and easy to miss: a develop database logs little, so the bill stays
     flat for a year and then is not flat. The point is less the money than that retention

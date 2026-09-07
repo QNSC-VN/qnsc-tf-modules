@@ -78,7 +78,7 @@ locals {
   # verified live: real develop logs landed in Loki queryable only as
   # {service_name="unknown_service"}, indistinguishable from every OTHER
   # unconfigured product's logs, while this same service's metrics/traces
-  # correctly read service_name="rally-api" (set by the app's OTel SDK,
+  # correctly read service_name="rova-api" (set by the app's OTel SDK,
   # which has no equivalent hook on a raw-stdout log path). The plugin's
   # own `logs_resource_metadata_key` option (default "Resource") does
   # NOTHING in the pinned v5.0.9 build — read from the plugin's actual C

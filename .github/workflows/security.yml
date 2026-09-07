@@ -32,7 +32,7 @@ jobs:
   # Replaces Code Scanning Default Setup's `Analyze (actions)` as the required
   # gate — that managed check doesn't reliably report on bot-authored PRs
   # (Dependabot/Renovate), leaving the required check stuck "Expected" forever.
-  # Root cause: qnsc-tf-modules#83.
+  # Root cause: tf-modules#83.
   actions-security:
     permissions:
       contents: read
